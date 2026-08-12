@@ -202,6 +202,7 @@ th{background:rgba(0,0,0,.03);font-weight:600}
     return {
       companyName: "ስማርት ቢዝነስ",
       theme: "light-theme",
+      vatEnabled: true,
       stock: [],
       sales: [],
       credits: [],
@@ -258,6 +259,7 @@ th{background:rgba(0,0,0,.03);font-weight:600}
     // never accidentally leak a field that gets added to DB later.
     return {
       companyName: DB.companyName,
+      vatEnabled: DB.vatEnabled,
       stock: DB.stock,
       sales: DB.sales,
       credits: DB.credits,
@@ -272,7 +274,7 @@ th{background:rgba(0,0,0,.03);font-weight:600}
   /** Restores business data fields from a parsed backup object. Never touches security data. */
   function importSnapshot(data) {
     if (!data || typeof data !== "object") throw new Error("Invalid backup payload");
-    const fields = ["stock", "sales", "credits", "creditHistory", "expenses", "companyName", "vatInputs"];
+    const fields = ["stock", "sales", "credits", "creditHistory", "expenses", "companyName", "vatInputs", "vatEnabled"];
     fields.forEach((f) => {
       if (data[f] !== undefined) DB[f] = data[f];
     });
@@ -390,14 +392,14 @@ th{background:rgba(0,0,0,.03);font-weight:600}
   // ========== Menu + navigation ==========
   const menuItems = [
     { title: "ዕቃዎች", icon: "📦", page: "stock" },
-    { title: "መሸጫ (POS + VAT)", icon: "🛒", page: "pos" },
+    { title: "መሸጫ (POS)", icon: "🛒", page: "pos", vatOnly: false },
     { title: "የዕለት ሪፖርት", icon: "📅", page: "dailyReport" },
     { title: "የሽያጭ ታሪክ", icon: "📜", page: "salesHistory" },
     { title: "የብድር መዝገብ", icon: "💳", page: "credit" },
     { title: "ወጪዎች", icon: "💸", page: "expenses" },
-    { title: "የቫት ሪፖርት", icon: "📑", page: "vatReport" },
+    { title: "የቫት ሪፖርት", icon: "📑", page: "vatReport", vatOnly: true },
     { title: "ጠቅላላ ሪፖርት", icon: "📊", page: "reports" },
-    { title: "ደረሰኝ (VAT)", icon: "🧾", page: "receipt" },
+    { title: "ደረሰኝ", icon: "🧾", page: "receipt" },
     { title: "ማስተካከያ", icon: "⚙️", page: "settings" },
     { title: "ባካፕ & ማጽጃ", icon: "💾", page: "backup" },
   ];
@@ -405,9 +407,13 @@ th{background:rgba(0,0,0,.03);font-weight:600}
   function renderDashboardMenu() {
     const g = document.getElementById("menuGrid");
     if (!g) return;
-    g.innerHTML = menuItems.map((i) =>
-      `<button type="button" class="menu-card" onclick="SBM.app.openPage('${escapeHTML(i.page)}')"><div class="card-icon">${i.icon}</div><div class="card-title">${escapeHTML(i.title)}</div></button>`
-    ).join("");
+    const vatOn = !!(SBM.DB && SBM.DB.vatEnabled);
+    g.innerHTML = menuItems
+      .filter((i) => !i.vatOnly || vatOn)
+      .map((i) => {
+        const title = i.page === "pos" ? (vatOn ? "መሸጫ (POS + VAT)" : "መሸጫ (POS)") : i.title;
+        return `<button type="button" class="menu-card" onclick="SBM.app.openPage('${escapeHTML(i.page)}')"><div class="card-icon">${i.icon}</div><div class="card-title">${escapeHTML(title)}</div></button>`;
+      }).join("");
   }
 
   function openPage(pageName) {
@@ -417,7 +423,7 @@ th{background:rgba(0,0,0,.03);font-weight:600}
     modal.classList.add("active");
     switch (pageName) {
       case "stock": title.innerText = "📦 የዕቃዎች መዝገብ (Stock)"; body.innerHTML = SBM.stock.renderUI(); break;
-      case "pos": SBM.sales.resetSession(); title.innerText = "🛒 መሸጫ ከ15% ቫት ጋር (POS)"; body.innerHTML = SBM.sales.renderUI(); break;
+      case "pos": SBM.sales.resetSession(); title.innerText = SBM.DB.vatEnabled ? "🛒 መሸጫ ከ15% ቫት ጋር (POS)" : "🛒 መሸጫ (POS)"; body.innerHTML = SBM.sales.renderUI(); break;
       case "salesHistory": title.innerText = "📜 የሽያጭ ሰነድ እና ታሪክ"; body.innerHTML = SBM.report.renderSalesHistoryUI(); break;
       case "dailyReport": title.innerText = "📅 የዕለት ሽያጭ ሪፖርት"; body.innerHTML = SBM.report.renderDailyReportUI(); break;
       case "credit": title.innerText = "💳 የብድር መዝገብ እና የሂሳብ ታሪክ"; body.innerHTML = SBM.credit.renderUI(); break;
@@ -1156,7 +1162,16 @@ th{background:rgba(0,0,0,.03);font-weight:600}
 
 // ==== stock.js ====
 /**
- * stock.js — የዕቃዎች መዝገብ (Stock, FIFO batches)
+ * stock.js — የዕቃዎች መዝገብ (Stock, FIFO batches, Unit + Bulk conversion)
+ *
+ * ⚖️ የመለኪያ አሃድ (Unit) አያያዝ፦
+ * እያንዳንዱ ዕቃ የራሱ "የመሸጫ አሃድ" (unit) አለው (ለምሳሌ ኪሎ፣ ፍሬ፣ ሊትር)። ስቶክ ሁልጊዜ
+ * የሚቀመጠው በዚህ **ትንሹ አሃድ** ነው (ለምሳሌ ኪሎ በኪሎ፣ ፍሬ በፍሬ) — "ኩንታል"፣
+ * "ካርቶን"፣ "ደርዘን" የመሳሰሉት የግዢ አሃዶች ብቻ ናቸው፣ በስቶክ ውስጥ አይቀመጡም።
+ * ደንበኛ ስቶክ ሲመዘግብ "በጅምላ ገዛሁ" ብሎ ጠቅላላ ዋጋ + ምን ያህል ትንሽ አሃድ እንደሚይዝ
+ * ካስገባ፣ ስርዓቱ ራሱ የነጠላ አሃድ ዋጋ (ዩኒት ዋጋ) ያሰላል። ይህ ለማንኛውም አዲስ የግዢ
+ * አይነት (ወደፊት ቢመጣ እንኳ) ያለ ተጨማሪ ኮድ ይሰራል — ሁሉም "1 ትልቅ ክፍል ስንት ትንሽ
+ * ክፍል ይይዛል?" በሚል ተመሳሳይ ስሌት ስለሚፈቱ።
  */
 (function (global) {
   "use strict";
@@ -1168,10 +1183,23 @@ th{background:rgba(0,0,0,.03);font-weight:600}
     return `
       <input type="text" class="search-bar" placeholder="🔍 እቃ መፈለጊያ..." onkeyup="SBM.stock.filter(this.value)">
       <div class="form-group"><label>የዕቃው ስም</label><input type="text" id="stkName"></div>
-      <div style="display:flex;gap:10px;">
+      <div class="form-group"><label>የመሸጫ አሃድ (ምሳሌ፡ ኪሎ፣ ፍሬ፣ ሊትር)</label><input type="text" id="stkUnit" placeholder="ፍሬ"></div>
+
+      <div class="form-group" style="flex-direction:row;align-items:center;gap:8px;">
+        <input type="checkbox" id="stkBulkMode" onchange="SBM.stock.toggleBulkFields()" style="width:auto;">
+        <label style="margin:0;">በጅምላ ገዛሁ (ካርቶን/ኩንታል/ደርዘን ወዘተ)</label>
+      </div>
+
+      <div id="stkDirectFields" style="display:flex;gap:10px;">
         <div class="form-group" style="flex:1"><label>ብዛት</label><input type="number" id="stkQty"></div>
         <div class="form-group" style="flex:1"><label>መግዣ ዋጋ (ETB)</label><input type="number" id="stkBuy"></div>
       </div>
+
+      <div id="stkBulkFields" class="hidden">
+        <div class="form-group"><label>ጠቅላላ የገዙበት ዋጋ (ETB)</label><input type="number" id="stkBulkTotalPrice" placeholder="ምሳሌ፡ 5000"></div>
+        <div class="form-group"><label>ወደ ስንት አሃድ ይከፈላል? (ምሳሌ፡ 1 ኩንታል = 100 ኪሎ)</label><input type="number" id="stkBulkUnits" placeholder="ምሳሌ፡ 100"></div>
+      </div>
+
       <button class="btn-primary" onclick="SBM.stock.add()">+ አዲስ ዕቃ መዝግብ</button>
       <div style="max-height:220px;overflow-y:auto;margin-top:15px;">
         <table><thead><tr><th>ስም</th><th>ጠቅላላ ብዛት</th><th>የቅርብ መግዣ ዋጋ</th><th>ድርጊት</th></tr></thead>
@@ -1179,12 +1207,21 @@ th{background:rgba(0,0,0,.03);font-weight:600}
       </div>`;
   }
 
+  function toggleBulkFields() {
+    const bulk = document.getElementById("stkBulkMode").checked;
+    const direct = document.getElementById("stkDirectFields");
+    const bulkFields = document.getElementById("stkBulkFields");
+    if (bulk) { direct.classList.add("hidden"); bulkFields.classList.remove("hidden"); }
+    else { direct.classList.remove("hidden"); bulkFields.classList.add("hidden"); }
+  }
+
   function generateRows(list) {
     if (!list || list.length === 0) return '<tr><td colspan="4" style="text-align:center;">ምንም ዕቃ አልተመዘገበም</td></tr>';
     return list.map((item) => {
       const last = (item.batches && item.batches.length > 0) ? item.batches[item.batches.length - 1].buyPrice : (item.buyPrice || 0);
+      const unit = escapeHTML(item.unit || "ፍሬ");
       return `<tr><td><b>${escapeHTML(item.name)}</b> ${item.qty <= 5 ? '<span style="color:red;">(አልቋል!)</span>' : ''}</td>
-        <td>${item.qty}</td><td>${Number(last).toFixed(2)} ETB</td>
+        <td>${item.qty} ${unit}</td><td>${Number(last).toFixed(2)} ETB/${unit}</td>
         <td class="action-btns">
           <button class="btn-success" onclick="SBM.stock.restock(${item.id})">+ጫን</button>
           <button class="btn-secondary" onclick="SBM.stock.edit(${item.id})">✏️</button>
@@ -1201,37 +1238,65 @@ th{background:rgba(0,0,0,.03);font-weight:600}
 
   function add() {
     const name = (document.getElementById("stkName").value || "").trim();
-    const qty = parseFloat(document.getElementById("stkQty").value) || 0;
-    const buy = parseFloat(document.getElementById("stkBuy").value) || 0;
+    const unit = (document.getElementById("stkUnit").value || "").trim() || "ፍሬ";
+    const bulkMode = document.getElementById("stkBulkMode").checked;
+
+    let qty, buy;
+    if (bulkMode) {
+      const totalPrice = parseFloat(document.getElementById("stkBulkTotalPrice").value) || 0;
+      const totalUnits = parseFloat(document.getElementById("stkBulkUnits").value) || 0;
+      if (totalPrice <= 0 || totalUnits <= 0) return alert("እባክዎን ትክክለኛ ጠቅላላ ዋጋ እና የአሃድ ብዛት ያስገቡ!");
+      qty = totalUnits;
+      buy = totalPrice / totalUnits;
+    } else {
+      qty = parseFloat(document.getElementById("stkQty").value) || 0;
+      buy = parseFloat(document.getElementById("stkBuy").value) || 0;
+    }
     if (!name || qty <= 0 || buy <= 0) return alert("እባክዎን ትክክለኛ የዕቃ ስም፣ ብዛት እና መግዣ ዋጋ ያስገቡ!");
+
     let ex = DB.stock.find((i) => i.name.trim().toLowerCase() === name.toLowerCase());
     if (ex) {
       ex.qty += qty;
       if (!ex.batches) ex.batches = [];
       ex.batches.push({ qty, buyPrice: buy });
       ex.buyPrice = buy;
+      if (!ex.unit) ex.unit = unit;
     } else {
-      DB.stock.push({ id: Date.now(), name, qty, buyPrice: buy, batches: [{ qty, buyPrice: buy }] });
+      DB.stock.push({ id: Date.now(), name, unit, qty, buyPrice: buy, batches: [{ qty, buyPrice: buy }] });
     }
     SBM.database.save("stock");
-    showToast("እቃው ተመዝግቧል!");
+    showToast(`እቃው ተመዝግቧል! (${Number(buy).toFixed(2)} ETB/${escapeHTML(unit)})`);
     SBM.app.openPage("stock");
   }
 
   function restock(id) {
     const item = DB.stock.find((i) => i.id === id);
     if (!item) return;
-    const q = parseFloat(prompt(`ለ "${item.name}" ስንት ብዛት ጨምር?`));
-    if (!q || isNaN(q) || q <= 0) return;
-    const last = (item.batches && item.batches.length > 0) ? item.batches[item.batches.length - 1].buyPrice : 0;
-    const nb = parseFloat(prompt("የአንዱ መግዣ ዋጋ ስንት ነው?", last));
-    if (isNaN(nb) || nb <= 0) return alert("እባክዎን ትክክለኛ የመግዣ ዋጋ ያስገቡ!");
+    const unit = item.unit || "ፍሬ";
+    const bulk = confirm(`"${item.name}" ን በጅምላ ነው (ካርቶን/ኩንታል/ደርዘን ወዘተ) የገዙት? \n\nOK = አዎ በጅምላ ገዛሁ\nCancel = አይ፣ በ${unit} ብቻ ነው የምጨምረው`);
+
+    let q, nb;
+    if (bulk) {
+      const totalPrice = parseFloat(prompt(`ጠቅላላ የገዙበት ዋጋ (ETB) ስንት ነው?`));
+      if (isNaN(totalPrice) || totalPrice <= 0) return alert("ትክክለኛ ዋጋ አላስገቡም!");
+      const totalUnits = parseFloat(prompt(`ወደ ስንት ${unit} ይከፈላል?`));
+      if (isNaN(totalUnits) || totalUnits <= 0) return alert("ትክክለኛ የአሃድ ብዛት አላስገቡም!");
+      q = totalUnits;
+      nb = totalPrice / totalUnits;
+    } else {
+      q = parseFloat(prompt(`ለ "${item.name}" ስንት ${unit} ጨምር?`));
+      if (!q || isNaN(q) || q <= 0) return;
+      const last = (item.batches && item.batches.length > 0) ? item.batches[item.batches.length - 1].buyPrice : 0;
+      nb = parseFloat(prompt(`የአንዱ ${unit} መግዣ ዋጋ ስንት ነው?`, last));
+      if (isNaN(nb) || nb <= 0) return alert("እባክዎን ትክክለኛ የመግዣ ዋጋ ያስገቡ!");
+    }
+
     if (!item.batches) item.batches = [];
     item.batches.push({ qty: q, buyPrice: nb });
     item.qty += q;
     item.buyPrice = nb;
     SBM.database.save("stock");
-    showToast("አዲስ ጭነት ተጨምሯል!");
+    showToast(`አዲስ ጭነት ተጨምሯል! (${Number(nb).toFixed(2)} ETB/${unit})`);
     SBM.app.openPage("stock");
   }
 
@@ -1241,6 +1306,8 @@ th{background:rgba(0,0,0,.03);font-weight:600}
     const nn = prompt("አዲስ የዕቃ ስም:", item.name);
     if (nn) {
       item.name = nn.trim();
+      const nu = prompt("የመሸጫ አሃድ (ኪሎ/ፍሬ/ሊትር):", item.unit || "ፍሬ");
+      if (nu) item.unit = nu.trim() || "ፍሬ";
       SBM.database.save("stock");
       showToast("መረጃው ተስተካክሏል!");
       SBM.app.openPage("stock");
@@ -1257,7 +1324,7 @@ th{background:rgba(0,0,0,.03);font-weight:600}
   }
 
   global.SBM = global.SBM || {};
-  global.SBM.stock = { renderUI, generateRows, filter, add, restock, edit, remove };
+  global.SBM.stock = { renderUI, toggleBulkFields, generateRows, filter, add, restock, edit, remove };
 })(window);
 
 
@@ -1295,12 +1362,12 @@ th{background:rgba(0,0,0,.03);font-weight:600}
     const list = DB.stock || [];
     const opts = list.length === 0
       ? '<option value="">ምንም እቃ በስቶክ ውስጥ የለም</option>'
-      : list.map((i) => `<option value="${i.id}">${escapeHTML(i.name)} (ቀሪ: ${i.qty})</option>`).join("");
+      : list.map((i) => `<option value="${i.id}">${escapeHTML(i.name)} (ቀሪ: ${i.qty} ${escapeHTML(i.unit || "ፍሬ")})</option>`).join("");
     return `
       <div style="border:1px solid var(--border);padding:10px;border-radius:10px;margin-bottom:12px;">
         <div class="form-group"><label>ዕቃ መምረጫ</label><select id="posItemSelect">${opts}</select></div>
         <div style="display:flex;gap:10px;">
-          <div class="form-group" style="flex:1"><label>ብዛት</label><input type="number" id="posQty" value="1"></div>
+          <div class="form-group" style="flex:1"><label>ብዛት</label><input type="number" id="posQty" value="1" step="0.01"></div>
           <div class="form-group" style="flex:1"><label>የአንዱ መሸጫ ዋጋ (ETB)</label><input type="number" id="posSellPrice" placeholder="ዋጋ ያስገቡ"></div>
         </div>
         <button class="btn-success" style="width:100%;padding:10px;font-weight:bold;" onclick="SBM.sales.addToCart()">+ እቃውን ወደ ዝርዝር ጨምር</button>
@@ -1312,8 +1379,8 @@ th{background:rgba(0,0,0,.03);font-weight:600}
       </div>
       <div style="background:rgba(10,94,176,.05);padding:10px;border-radius:8px;margin:10px 0;text-align:right;">
         <div style="font-size:13px;color:var(--secondary);">ንኡስ ድምር: <span id="cartSubtotal">0.00</span> ETB</div>
-        <div style="font-size:13px;color:var(--secondary);">ቫት 15%: <span id="cartVatAmount">0.00</span> ETB</div>
-        <div style="font-weight:bold;font-size:16px;margin-top:4px;">ጠቅላላ ክፍያ ከቫት ጋር: <span id="cartGrandTotal" style="color:#0A5EB0;">0.00 ETB</span></div>
+        <div id="cartVatRow" style="font-size:13px;color:var(--secondary);${DB.vatEnabled ? "" : "display:none;"}">ቫት 15%: <span id="cartVatAmount">0.00</span> ETB</div>
+        <div style="font-weight:bold;font-size:16px;margin-top:4px;">${DB.vatEnabled ? "ጠቅላላ ክፍያ ከቫት ጋር" : "ጠቅላላ ክፍያ"}: <span id="cartGrandTotal" style="color:#0A5EB0;">0.00 ETB</span></div>
       </div>
       <div class="form-group"><label>የክፍያ ሁኔታ</label>
         <select id="posPayMode" onchange="SBM.sales.toggleCreditFields(this.value)">
@@ -1327,7 +1394,7 @@ th{background:rgba(0,0,0,.03);font-weight:600}
         <div class="form-group"><label>የሚከፈልበት ቀን (የኢትዮጵያ ካላንደር)</label>${renderEthiopicDatePickerHTML("posDue")}</div>
         <div class="form-group hidden" id="posDownPayContainer"><label>አሁን በካሽ የከፈለው መጠን (ETB)</label><input type="number" id="posDownPayment" value="0"></div>
       </div>
-      <button class="btn-primary" style="padding:12px;font-weight:bold;" onclick="SBM.sales.processSale()">✔ ሽያጭ ፈጽም (ከቫት ጋር)</button>`;
+      <button class="btn-primary" style="padding:12px;font-weight:bold;" onclick="SBM.sales.processSale()">✔ ሽያጭ ፈጽም${DB.vatEnabled ? " (ከቫት ጋር)" : ""}</button>`;
   }
 
   function addToCart() {
@@ -1456,7 +1523,7 @@ th{background:rgba(0,0,0,.03);font-weight:600}
           <button class="btn-danger" onclick="SBM.sales.removeFromCart('${c.cartLineId}')">❌</button>
         </td></tr>`;
     }).join("");
-    const vat = sub * 0.15;
+    const vat = DB.vatEnabled ? sub * 0.15 : 0;
     sE.innerText = sub.toFixed(2); vE.innerText = vat.toFixed(2); gE.innerText = (sub + vat).toFixed(2) + " ETB";
   }
 
@@ -1472,7 +1539,7 @@ th{background:rgba(0,0,0,.03);font-weight:600}
     if (posCart.length === 0) return alert("እባክዎን መጀመሪያ እቃዎችን ወደ ዝርዝር ይጨምሩ!");
     const payMode = document.getElementById("posPayMode").value;
     const sub = posCart.reduce((s, c) => s + c.subtotal, 0);
-    const vat = sub * 0.15;
+    const vat = DB.vatEnabled ? sub * 0.15 : 0;
     const grand = sub + vat;
     const profit = posCart.reduce((s, c) => s + c.profit, 0);
     const cn = document.getElementById("posCustomerName") ? document.getElementById("posCustomerName").value.trim() : "";
@@ -1513,6 +1580,7 @@ th{background:rgba(0,0,0,.03);font-weight:600}
     }
     DB.sales.push({
       id: Date.now(), items: [...posCart], summaryName: summary, subtotal: sub, vatAmount: vat,
+      vatApplied: !!DB.vatEnabled,
       total: grand, cashAmount: cash, creditAmount: credit, profit, date: getEthDateStr(),
       payMode, customer: cn || "የካሽ ደንበኛ",
     });
@@ -1864,18 +1932,18 @@ th{background:rgba(0,0,0,.03);font-weight:600}
   function renderUI() {
     const last = (DB.sales || [])[DB.sales.length - 1];
     if (!last) return '<p style="text-align:center;">ምንም የቅርብ ጊዜ ሽያጭ የለም።</p>';
-    const sub = Number(last.subtotal || (last.total ? last.total / 1.15 : 0));
-    const vat = Number(last.vatAmount || (sub * 0.15));
+    const vatApplied = last.vatApplied !== undefined ? last.vatApplied : (Number(last.vatAmount || 0) > 0);
+    const sub = Number(last.subtotal || (last.total ? last.total / (vatApplied ? 1.15 : 1) : 0));
+    const vat = Number(last.vatAmount || (vatApplied ? sub * 0.15 : 0));
     const tot = Number(last.total || (sub + vat));
     return `<div style="border:1px dashed var(--border);padding:15px;text-align:center;font-family:monospace;">
-      <h3>${escapeHTML(DB.companyName)}</h3><p><b>የእቃዎች መሸጫ ደረሰኝ (VAT Invoice)</b></p>
+      <h3>${escapeHTML(DB.companyName)}</h3><p><b>የእቃዎች መሸጫ ደረሰኝ${vatApplied ? " (VAT Invoice)" : ""}</b></p>
       <p>ደንበኛ: <b>${escapeHTML(last.customer)}</b></p><p>ቀን: ${escapeHTML(last.date)}</p>
       <hr style="border-top:1px dashed #ccc;margin:10px 0;">
       <div style="text-align:left;font-size:13px;margin-bottom:10px;"><p><b>ዕቃዎች ዝርዝር፦</b></p><p>${escapeHTML(last.summaryName)}</p></div>
       <hr style="border-top:1px dashed #ccc;margin:10px 0;">
       <div style="text-align:right;font-size:13px;line-height:1.6;">
-        <p>ንኡስ ድምር: <b>${sub.toFixed(2)} ETB</b></p>
-        <p>ቫት 15%: <b>${vat.toFixed(2)} ETB</b></p>
+        ${vatApplied ? `<p>ንኡስ ድምር: <b>${sub.toFixed(2)} ETB</b></p><p>ቫት 15%: <b>${vat.toFixed(2)} ETB</b></p>` : ""}
         <p style="font-size:15px;color:#0A5EB0;"><b>ጠቅላላ ክፍያ: ${tot.toFixed(2)} ETB</b></p>
       </div><br><button class="btn-primary" onclick="SBM.app.printModalContent()">🖨️ ፕሪንት አድርግ</button></div>`;
   }
@@ -1992,11 +2060,25 @@ th{background:rgba(0,0,0,.03);font-weight:600}
       <div class="form-group"><label>የድርጅት ስም</label><input type="text" id="cfgComp" value="${escapeHTML(DB.companyName)}"></div>
       <button class="btn-primary" onclick="SBM.settings.saveCompanyName()">የድርጅት ስም መዝግብ</button>
       <hr style="margin:16px 0;border-color:var(--border);">
+      <h4 style="margin-bottom:10px;">🧾 ቫት (VAT)</h4>
+      <div class="form-group" style="flex-direction:row;align-items:center;gap:8px;">
+        <input type="checkbox" id="cfgVatEnabled" style="width:auto;" ${DB.vatEnabled ? "checked" : ""} onchange="SBM.settings.toggleVat()">
+        <label style="margin:0;">ቫት ተመዝጋቢ ነኝ (15% ቫት በሽያጭ ላይ ይታከል)</label>
+      </div>
+      <p style="font-size:12px;color:var(--secondary);margin-top:6px;">ይህንን ካጠፉ፣ POS ያለ ቫት ብቻ ይሸጣል፣ የቫት ሪፖርት ገጽም ይደበቃል። የትርፍ ሪፖርት ግን ሁልጊዜ ትክክለኛ ሆኖ ይቀጥላል — ውሳኔው በማንኛውም ጊዜ ሊቀየር ይችላል።</p>
+      <hr style="margin:16px 0;border-color:var(--border);">
       <h4 style="margin-bottom:10px;">🔑 ፒን (PIN) ቀይር</h4>
       <div class="form-group"><label>የአሁኑ ፒን</label><input type="password" id="cfgOldPin" inputmode="numeric" maxlength="6"></div>
       <div class="form-group"><label>አዲስ ፒን</label><input type="password" id="cfgNewPin" inputmode="numeric" maxlength="6"></div>
       <button class="btn-primary" onclick="SBM.settings.changePin()">ፒን ቀይር</button>
       <p style="font-size:12px;color:var(--secondary);margin-top:8px;">ፒን ከቀየሩ በኋላ አዲስ የመልሶ ማግኛ ኮድ (Recovery Code) ይታያል — ይጻፉት!</p>`;
+  }
+
+  function toggleVat() {
+    DB.vatEnabled = document.getElementById("cfgVatEnabled").checked;
+    SBM.database.save("vatEnabled");
+    if (SBM.app && SBM.app.renderDashboardMenu) SBM.app.renderDashboardMenu();
+    showToast(DB.vatEnabled ? "ቫት ነቅቷል!" : "ቫት ጠፍቷል! POS ከአሁን ጀምሮ ያለ ቫት ይሸጣል");
   }
 
   function saveCompanyName() {
@@ -2022,7 +2104,7 @@ th{background:rgba(0,0,0,.03);font-weight:600}
   }
 
   global.SBM = global.SBM || {};
-  global.SBM.settings = { renderUI, saveCompanyName, changePin };
+  global.SBM.settings = { renderUI, saveCompanyName, toggleVat, changePin };
 })(window);
 
 </script>
