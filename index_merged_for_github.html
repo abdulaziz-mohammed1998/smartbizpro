@@ -1,0 +1,2242 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Business Manager Pro</title>
+<style>
+:root{--bg:#f4f6f9;--card:#fff;--text:#2c3e50;--primary:#0A5EB0;--primary-hover:#084c8d;--secondary:#6c757d;--success:#28a745;--danger:#dc3545;--border:#e2e8f0;--shadow:0 4px 12px rgba(0,0,0,.08)}
+body.dark-theme{--bg:#121212;--card:#1e1e1e;--text:#f1f1f1;--border:#333;--shadow:0 4px 12px rgba(0,0,0,.5)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Tahoma,sans-serif;line-height:1.5;transition:background .3s,color .3s}
+button,input,select,textarea{font:inherit}
+.hidden{display:none!important}
+.toast{position:fixed;bottom:25px;left:50%;transform:translateX(-50%);background:#323232;color:#fff;padding:12px 24px;border-radius:25px;font-size:14px;font-weight:500;box-shadow:0 6px 16px rgba(0,0,0,.25);z-index:1000;animation:fadeInUp .3s ease}
+@keyframes fadeInUp{from{opacity:0;transform:translate(-50%,20px)}to{opacity:1;transform:translate(-50%,0)}}
+.overdue-badge{background:var(--danger);color:#fff;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:bold;display:inline-block;animation:pulse 1.5s infinite}
+@keyframes pulse{0%{opacity:1}50%{opacity:.6}100%{opacity:1}}
+.splash-screen{position:fixed;inset:0;background:var(--primary);color:#fff;display:flex;justify-content:center;align-items:center;text-align:center;z-index:1000}
+.app-icon{font-size:60px;margin-bottom:10px}
+.login-screen{position:fixed;inset:0;display:flex;justify-content:center;align-items:center;background:var(--bg);padding:20px}
+.login-card{background:var(--card);padding:30px 20px;border-radius:16px;box-shadow:var(--shadow);width:100%;max-width:350px;text-align:center}
+.login-card input{width:100%;padding:12px;margin:15px 0;border:1px solid var(--border);border-radius:8px;font-size:18px;text-align:center;background:var(--bg);color:var(--text)}
+.login-actions{display:flex;gap:10px}
+.login-actions .btn-primary{width:auto;flex:2}
+.login-actions .btn-secondary{flex:1}
+.app-header{display:flex;justify-content:space-between;align-items:center;padding:15px 20px;background:var(--card);box-shadow:var(--shadow);position:sticky;top:0;z-index:100}
+.icon-btn{background:transparent;border:none;font-size:20px;cursor:pointer;margin-left:10px;color:var(--text)}
+.dashboard-container{padding:20px;max-width:800px;margin:0 auto}
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:15px}
+.menu-card{background:var(--card);padding:20px 10px;border-radius:14px;box-shadow:var(--shadow);text-align:center;cursor:pointer;transition:transform .2s;display:flex;flex-direction:column;align-items:center;width:100%}
+.menu-card:active{transform:scale(.96)}
+.card-icon{font-size:36px;margin-bottom:8px}
+.card-title{font-size:14px;font-weight:600}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;justify-content:center;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .3s;z-index:200}
+.modal-overlay.active{opacity:1;pointer-events:auto}
+.modal-card{background:var(--card);width:100%;max-width:650px;border-radius:20px 20px 0 0;padding:20px;max-height:85vh;overflow-y:auto;transform:translateY(100%);transition:transform .3s}
+.modal-overlay.active .modal-card{transform:translateY(0)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:15px}
+.close-btn{background:none;border:none;font-size:24px;cursor:pointer;color:var(--text)}
+.form-group{margin-bottom:12px;display:flex;flex-direction:column}
+.form-group label{font-size:13px;margin-bottom:4px;font-weight:600}
+input,select,textarea{padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px}
+button{border:none;border-radius:8px;cursor:pointer;transition:opacity .2s}
+button:active{opacity:.8}
+.btn-primary{background:var(--primary);color:#fff;width:100%;padding:10px}
+.btn-success{background:var(--success);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-secondary{background:var(--secondary);color:#fff}
+.search-bar{width:100%;margin-bottom:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:10px 8px;text-align:left;border-bottom:1px solid var(--border)}
+th{background:rgba(0,0,0,.03);font-weight:600}
+.action-btns{display:flex;gap:4px}
+.action-btns button{padding:6px 8px;font-size:12px}
+.eth-date-picker{display:flex;gap:6px}
+.eth-date-picker select{flex:1;min-width:0}
+.summary-box{background:rgba(10,94,176,.08);border-left:4px solid var(--primary);padding:12px;border-radius:6px;margin-bottom:15px}
+
+</style>
+</head>
+<body>
+
+<div id="splashScreen" class="splash-screen">
+  <div><div class="app-icon">📊</div><h1>ስማርት ቢዝነስ ማኔጀር</h1><p>በመጫን ላይ...</p></div>
+</div>
+
+<div id="activationScreen" class="login-screen hidden">
+  <div class="login-card">
+    <div class="app-icon">🔑</div>
+    <h2 id="actTitle">የማንቃት ኮድ</h2>
+    <div class="form-group">
+      <label>የሱቁ ስም</label>
+      <input type="text" id="actShop" placeholder="ለምሳሌ፡ አበባ ሱቅ">
+    </div>
+    <div class="form-group">
+      <label>የፍቃድ ኮድ (License Key)</label>
+      <input type="text" id="actCode" placeholder="ከሻጩ የተሰጠዎትን ኮድ ይለጥፉ">
+    </div>
+    <button class="btn-primary" onclick="SBM.app.tryActivate()">✔ አነቃቃ</button>
+    <p style="font-size:12px;color:var(--secondary);margin-top:10px;">ፍቃድ ለማግኘት ሻጩን ያግኙ</p>
+  </div>
+</div>
+
+<div id="loginScreen" class="login-screen hidden">
+  <div class="login-card">
+    <div class="app-icon">🔐</div>
+    <h2>እንኳን ደህና መጡ</h2>
+    <form onsubmit="SBM.app.handleLogin(); return false;">
+      <div class="form-group">
+        <label for="pinInput">እባክዎን ፒን (PIN) ያስገቡ</label>
+        <input id="pinInput" type="password" inputmode="numeric" autocomplete="off" placeholder="••••" maxlength="6">
+      </div>
+      <div class="login-actions">
+        <button type="button" id="togglePinBtn" class="btn-secondary">ግልጽ</button>
+        <button type="submit" class="btn-primary">ግባ</button>
+      </div>
+    </form>
+    <button type="button" id="forgotBtn" class="btn-secondary" style="margin-top:10px;width:100%;" onclick="SBM.app.forgotPIN()">🔓 ፒን ረሳሁ</button>
+  </div>
+</div>
+
+<div id="appShell" class="hidden">
+  <header class="app-header">
+    <h1 id="headerCompName">ስማርት ቢዝነስ</h1>
+    <div>
+      <button class="icon-btn" type="button" onclick="SBM.app.toggleTheme()">🌓</button>
+      <button class="icon-btn" type="button" onclick="SBM.app.handleLogout()">🚪</button>
+    </div>
+  </header>
+  <main class="dashboard-container">
+    <section class="summary-box">
+      <strong>አሁን ምን ምን አለ</strong>
+      <p>ከታች ያሉትን ሜኖች በመጫን ስቶክ፣ ሽያጭ፣ ዱቤ፣ ወጪ እና ሪፖርት ይከታተሉ።</p>
+    </section>
+    <div id="menuGrid" class="menu-grid"></div>
+  </main>
+</div>
+
+<div id="modalOverlay" class="modal-overlay">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-header">
+      <h2 id="modalTitle">ርዕስ</h2>
+      <button class="close-btn" type="button" onclick="SBM.app.closeModal()" aria-label="ዝጋ">×</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+<!--
+  የስክሪፕት አጫጫን ቅደም ተከተል አስፈላጊ ነው፦
+  1) database.js  → SBM.DB / SBM.database ይፈጥራል
+  2) app.js       → SBM.utils / SBM.app ይፈጥራል (ሌሎቹ ፋይሎች በዚህ ላይ ይመሰረታሉ)
+  3) auth.js, activation.js → የደህንነት ሞጁሎች
+  4) sync.js      → Firebase cloud backup (ሙሉ በሙሉ ጸጥ ያለ)
+  5) stock/sales/credit/report/receipt/backup/settings → የቢዝነስ ገጽታዎች
+-->
+<!-- Firebase SDK (compat build — works with plain <script> tags, no bundler needed) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+// ==== database.js ====
+/**
+ * database.js
+ * ---------------------------------------------------------------------------
+ * የቢዝነስ ዳታ ንብርብር (Data Layer)
+ *
+ * ⚠️ አስፈላጊ የደህንነት መርህ፦
+ * ይህ ፋይል የቢዝነስ ዳታን ብቻ ይይዛል (stock, sales, credits, expenses, ...).
+ * PIN hash, activation/license, lock-out counters የመሳሰሉት የደህንነት መረጃዎች
+ * በተለየ namespace (SBM_SEC_*) በ auth.js / activation.js ውስጥ ብቻ ይቀመጣሉ።
+ * ይህ መለያየት ለምን አስፈለገ? DB.export() ስንል የደህንነት ሚስጥሮች በስህተት ተካትተው
+ * ወደ ባካፕ ፋይል ውስጥ እንዳይወጡ ለመከላከል ነው (defense in depth).
+ * ---------------------------------------------------------------------------
+ */
+(function (global) {
+  "use strict";
+
+  const STORAGE_PREFIX = "sbm_"; // Business-data keys only.
+
+  /** In-memory fallback if localStorage is unavailable (private mode, quota, etc). */
+  const memoryFallback = {};
+
+  function storageAvailable() {
+    try {
+      const k = "__sbm_test__";
+      localStorage.setItem(k, "1");
+      localStorage.removeItem(k);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  const HAS_LS = storageAvailable();
+
+  function rawGet(key) {
+    if (HAS_LS) return localStorage.getItem(key);
+    return Object.prototype.hasOwnProperty.call(memoryFallback, key) ? memoryFallback[key] : null;
+  }
+  function rawSet(key, value) {
+    if (HAS_LS) { localStorage.setItem(key, value); return; }
+    memoryFallback[key] = value;
+  }
+  function rawRemove(key) {
+    if (HAS_LS) { localStorage.removeItem(key); return; }
+    delete memoryFallback[key];
+  }
+
+  /** Keys stored as raw strings (not JSON). */
+  const RAW_KEYS = new Set(["companyName", "theme"]);
+
+  function defaultSchema() {
+    return {
+      companyName: "ስማርት ቢዝነስ",
+      theme: "light-theme",
+      vatEnabled: true,
+      stock: [],
+      sales: [],
+      credits: [],
+      creditHistory: {},
+      expenses: [],
+      vatInputs: {},
+    };
+  }
+
+  const DB = defaultSchema();
+
+  /** Loads every business-data field from storage into the in-memory DB object. */
+  function loadAll() {
+    const schema = defaultSchema();
+    Object.keys(schema).forEach((key) => {
+      const stored = rawGet(STORAGE_PREFIX + key);
+      if (stored === null || stored === undefined) {
+        DB[key] = schema[key];
+        return;
+      }
+      if (RAW_KEYS.has(key)) {
+        DB[key] = stored;
+      } else {
+        try {
+          DB[key] = JSON.parse(stored);
+        } catch (e) {
+          console.warn("sbm database: corrupt field, resetting →", key, e);
+          DB[key] = schema[key];
+        }
+      }
+    });
+  }
+
+  /** Persists one field of DB back to storage. */
+  function save(key) {
+    if (!(key in DB)) return;
+    const value = DB[key];
+    if (RAW_KEYS.has(key)) {
+      rawSet(STORAGE_PREFIX + key, String(value));
+    } else {
+      rawSet(STORAGE_PREFIX + key, JSON.stringify(value));
+    }
+    // Cloud backup: fire a debounced push if sync.js has been loaded and initialized.
+    // localStorage above is already the source of truth by this point — this is
+    // purely a best-effort background copy, never blocking or required for save() to work.
+    if (global.SBM && global.SBM.sync && global.SBM.sync.pushToCloud) {
+      global.SBM.sync.pushToCloud();
+    }
+  }
+
+  /** Exports a safe, security-free snapshot of business data for backup. */
+  function exportSnapshot() {
+    // Explicit whitelist copy — safer than {...DB} + delete, because it can
+    // never accidentally leak a field that gets added to DB later.
+    return {
+      companyName: DB.companyName,
+      vatEnabled: DB.vatEnabled,
+      stock: DB.stock,
+      sales: DB.sales,
+      credits: DB.credits,
+      creditHistory: DB.creditHistory,
+      expenses: DB.expenses,
+      vatInputs: DB.vatInputs,
+      exportedAt: new Date().toISOString(),
+      schemaVersion: 1,
+    };
+  }
+
+  /** Restores business data fields from a parsed backup object. Never touches security data. */
+  function importSnapshot(data) {
+    if (!data || typeof data !== "object") throw new Error("Invalid backup payload");
+    const fields = ["stock", "sales", "credits", "creditHistory", "expenses", "companyName", "vatInputs", "vatEnabled"];
+    fields.forEach((f) => {
+      if (data[f] !== undefined) DB[f] = data[f];
+    });
+    fields.forEach(save);
+  }
+
+  function resetTransactionalData() {
+    DB.sales = [];
+    DB.expenses = [];
+    DB.credits = [];
+    DB.creditHistory = {};
+    ["sales", "expenses", "credits", "creditHistory"].forEach(save);
+  }
+
+  global.SBM = global.SBM || {};
+  global.SBM.DB = DB;
+  global.SBM.database = {
+    loadAll,
+    save,
+    exportSnapshot,
+    importSnapshot,
+    resetTransactionalData,
+    hasLocalStorage: HAS_LS,
+  };
+})(window);
+
+
+// ==== app.js ====
+/**
+ * app.js — Bootstrap, Navigation, Shared Utilities
+ * ---------------------------------------------------------------------------
+ * ይህ ፋይል ማንኛውንም ሚስጥር (PIN/License) አይይዝም — ናቪጌሽን፣ የጋራ helper functions፣
+ * እና የስክሪኖች መቀያየር (splash → activation/login → dashboard) ብቻ ነው የሚይዘው።
+ * ---------------------------------------------------------------------------
+ */
+(function (global) {
+  "use strict";
+
+  // ========== Shared utils (used by every module) ==========
+  const ethMonthsAmharic = ["መስከረም", "ጥቅምት", "ህዳር", "ታህሳስ", "ጥር", "የካቲት", "መጋቢት", "ሚያዝያ", "ግንቦት", "ሰኔ", "ሐምሌ", "ነሐሴ", "ጳጉሜ"];
+
+  function escapeHTML(s) {
+    return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  function jsAttr(v) { return escapeHTML(JSON.stringify(String(v ?? ""))); }
+
+  let toastTimer;
+  function showToast(m) {
+    const t = document.getElementById("toast");
+    if (!t) return;
+    t.innerText = m;
+    t.classList.remove("hidden");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.add("hidden"), 3000);
+  }
+
+  // ---------- Ethiopian calendar helpers ----------
+  function getEthDateObj() {
+    const now = new Date();
+    const gY = now.getFullYear(), gM = now.getMonth() + 1, gD = now.getDate();
+    let a = Math.floor((14 - gM) / 12);
+    let y = gY + 4800 - a;
+    let m = gM + 12 * a - 3;
+    let jdn = gD + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
+    let r = (jdn - 1723856) % 1461;
+    let n = (r % 365) + 365 * Math.floor(r / 1460);
+    let eY = 4 * Math.floor((jdn - 1723856) / 1461) + Math.floor(r / 365) - Math.floor(r / 1460);
+    let eM = Math.floor(n / 30) + 1;
+    let eD = (n % 30) + 1;
+    if (eM > 13) { eM = 1; eY += 1; }
+    return { year: eY, month: eM, date: eD };
+  }
+  function getEthDateStr() { const e = getEthDateObj(); return ethMonthsAmharic[e.month - 1] + " " + e.date + "፣ " + e.year + " ዓ.ም"; }
+  function getCurrentEthYMD() { const e = getEthDateObj(); return e.year + "-" + String(e.month).padStart(2, "0") + "-" + String(e.date).padStart(2, "0"); }
+  function isDateOverdue(s) {
+    if (!s) return false;
+    const p = s.split("-");
+    if (p.length !== 3) return false;
+    const c = getEthDateObj();
+    const y = +p[0], m = +p[1], d = +p[2];
+    if (c.year > y) return true;
+    if (c.year === y && c.month > m) return true;
+    if (c.year === y && c.month === m && c.date > d) return true;
+    return false;
+  }
+  function renderEthiopicDatePickerHTML(prefix) {
+    const cur = getEthDateObj();
+    let d = "", m = "", y = "";
+    for (let i = 1; i <= 30; i++) d += `<option value="${i}"${i === cur.date ? " selected" : ""}>${i}</option>`;
+    ethMonthsAmharic.forEach((mm, idx) => { m += `<option value="${idx + 1}"${idx + 1 === cur.month ? " selected" : ""}>${mm}</option>`; });
+    for (let yy = cur.year; yy <= cur.year + 5; yy++) y += `<option value="${yy}">${yy}</option>`;
+    return `<div class="eth-date-picker"><select id="${prefix}_day">${d}</select><select id="${prefix}_month">${m}</select><select id="${prefix}_year">${y}</select></div>`;
+  }
+  function getSelectedEthDateValue(prefix) {
+    const d = document.getElementById(prefix + "_day"), m = document.getElementById(prefix + "_month"), y = document.getElementById(prefix + "_year");
+    if (!d || !m || !y) return "";
+    return y.value + "-" + m.value.padStart(2, "0") + "-" + d.value.padStart(2, "0");
+  }
+  function formatEthDateForDisplay(s) {
+    if (!s) return "አልተጠቀሰም";
+    const p = s.split("-");
+    if (p.length !== 3) return s;
+    const mi = +p[1] - 1;
+    if (!ethMonthsAmharic[mi]) return s;
+    return ethMonthsAmharic[mi] + " " + p[2] + "፣ " + p[0] + " ዓ.ም";
+  }
+
+  global.SBM = global.SBM || {};
+  global.SBM.utils = {
+    escapeHTML, jsAttr, showToast, ethMonthsAmharic,
+    getEthDateObj, getEthDateStr, getCurrentEthYMD, isDateOverdue,
+    renderEthiopicDatePickerHTML, getSelectedEthDateValue, formatEthDateForDisplay,
+  };
+
+  // ========== Menu + navigation ==========
+  const menuItems = [
+    { title: "ዕቃዎች", icon: "📦", page: "stock" },
+    { title: "መሸጫ (POS)", icon: "🛒", page: "pos", vatOnly: false },
+    { title: "የዕለት ሪፖርት", icon: "📅", page: "dailyReport" },
+    { title: "የሽያጭ ታሪክ", icon: "📜", page: "salesHistory" },
+    { title: "የብድር መዝገብ", icon: "💳", page: "credit" },
+    { title: "ወጪዎች", icon: "💸", page: "expenses" },
+    { title: "የቫት ሪፖርት", icon: "📑", page: "vatReport", vatOnly: true },
+    { title: "ጠቅላላ ሪፖርት", icon: "📊", page: "reports" },
+    { title: "ደረሰኝ", icon: "🧾", page: "receipt" },
+    { title: "ማስተካከያ", icon: "⚙️", page: "settings" },
+    { title: "ባካፕ & ማጽጃ", icon: "💾", page: "backup" },
+  ];
+
+  function renderDashboardMenu() {
+    const g = document.getElementById("menuGrid");
+    if (!g) return;
+    const vatOn = !!(SBM.DB && SBM.DB.vatEnabled);
+    g.innerHTML = menuItems
+      .filter((i) => !i.vatOnly || vatOn)
+      .map((i) => {
+        const title = i.page === "pos" ? (vatOn ? "መሸጫ (POS + VAT)" : "መሸጫ (POS)") : i.title;
+        return `<button type="button" class="menu-card" onclick="SBM.app.openPage('${escapeHTML(i.page)}')"><div class="card-icon">${i.icon}</div><div class="card-title">${escapeHTML(title)}</div></button>`;
+      }).join("");
+  }
+
+  function openPage(pageName) {
+    const modal = document.getElementById("modalOverlay"), title = document.getElementById("modalTitle"), body = document.getElementById("modalBody");
+    if (!modal || !title || !body) return;
+    pageName = String(pageName).trim();
+    modal.classList.add("active");
+    switch (pageName) {
+      case "stock": title.innerText = "📦 የዕቃዎች መዝገብ (Stock)"; body.innerHTML = SBM.stock.renderUI(); break;
+      case "pos": SBM.sales.resetSession(); title.innerText = SBM.DB.vatEnabled ? "🛒 መሸጫ ከ15% ቫት ጋር (POS)" : "🛒 መሸጫ (POS)"; body.innerHTML = SBM.sales.renderUI(); SBM.sales.onItemChange(); break;
+      case "salesHistory": title.innerText = "📜 የሽያጭ ሰነድ እና ታሪክ"; body.innerHTML = SBM.report.renderSalesHistoryUI(); break;
+      case "dailyReport": title.innerText = "📅 የዕለት ሽያጭ ሪፖርት"; body.innerHTML = SBM.report.renderDailyReportUI(); break;
+      case "credit": title.innerText = "💳 የብድር መዝገብ እና የሂሳብ ታሪክ"; body.innerHTML = SBM.credit.renderUI(); break;
+      case "expenses": title.innerText = "💸 የወጪዎች መዝገብ እና ታሪክ"; body.innerHTML = SBM.report.renderExpenseUI(); break;
+      case "vatReport": title.innerText = "📑 የቫት ሪፖርት (VAT Report)"; body.innerHTML = SBM.report.renderVatReportUI(); SBM.report.updateVatReport(); break;
+      case "reports": title.innerText = "📊 የትርፍና ኪሳራ ሪፖርት"; body.innerHTML = SBM.report.renderReportsUI(); break;
+      case "receipt": title.innerText = "🧾 የቫት ደረሰኝ ማተሚያ"; body.innerHTML = SBM.receipt.renderUI(); break;
+      case "settings": title.innerText = "⚙️ ማስተካከያ (Settings)"; body.innerHTML = SBM.settings.renderUI(); break;
+      case "backup": title.innerText = "💾 ዳታ ባካፕ እና ማጽጃ"; body.innerHTML = SBM.backup.renderUI(); break;
+    }
+  }
+  function closeModal() {
+    const m = document.getElementById("modalOverlay");
+    if (m) m.classList.remove("active");
+  }
+
+  // ========== Theme ==========
+  function toggleTheme() {
+    SBM.DB.theme = SBM.DB.theme === "light-theme" ? "dark-theme" : "light-theme";
+    document.body.className = SBM.DB.theme;
+    SBM.database.save("theme");
+  }
+
+  // ========== Print / Share ==========
+  function printModalContent() {
+    const card = document.querySelector(".modal-card");
+    if (!card) return;
+    const clone = card.cloneNode(true);
+    const vatIn = clone.querySelector("#vatInputAmt");
+    if (vatIn) {
+      const b = document.createElement("b");
+      b.innerText = (parseFloat(vatIn.value) || 0).toFixed(2) + " ETB";
+      vatIn.parentNode.replaceChild(b, vatIn);
+    }
+    clone.querySelectorAll("button, input, select").forEach((el) => el.remove());
+    const frame = document.createElement("iframe");
+    frame.style.position = "fixed"; frame.style.width = "0"; frame.style.height = "0"; frame.style.border = "0";
+    document.body.appendChild(frame);
+    const doc = frame.contentWindow.document;
+    doc.open();
+    doc.write(`<html><head><meta charset="UTF-8"><title>Print</title><style>
+      body{font-family:Segoe UI,Tahoma,sans-serif;padding:20px;color:#000;font-size:14px;line-height:1.9;}
+      h2,h3,h4{text-align:center;margin:10px 0;} p{margin:8px 0;}
+      table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0;}
+      th,td{border:1px solid #ccc;padding:6px;text-align:left;}
+      hr{border:none;border-top:1px dashed #999;margin:12px 0;} .hidden{display:none !important;}
+      <\/style><\/head><body>${clone.innerHTML}<\/body><\/html>`);
+    doc.close();
+    setTimeout(() => { frame.contentWindow.focus(); frame.contentWindow.print(); setTimeout(() => frame.remove(), 2000); }, 300);
+  }
+
+  function shareCurrentPage() {
+    const body = document.getElementById("modalBody");
+    const titleEl = document.getElementById("modalTitle");
+    if (!body) return;
+    const clone = body.cloneNode(true);
+    clone.querySelectorAll("button, input, select").forEach((el) => el.remove());
+    const text = (titleEl ? titleEl.innerText + "\n" : "") + clone.innerText.trim();
+
+    if (navigator.share) {
+      navigator.share({ title: "Smart Business Manager", text }).catch(() => copyToClipboard(text));
+      return;
+    }
+    copyToClipboard(text);
+  }
+
+  function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text)
+        .then(() => showToast("ተቀድቷል! ወደ ቴሌግራም/ላከበት ቦታ ይለጥፉ 📋"))
+        .catch(() => legacyCopy(text));
+    } else {
+      legacyCopy(text);
+    }
+  }
+
+  function legacyCopy(text) {
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      showToast("ተቀድቷል! ወደ ቴሌግራም/ላከበት ቦታ ይለጥፉ 📋");
+    } catch (e) {
+      showToast("ኮፒ ማድረግ አልተቻለም። ጽሁፉን በእጅ ይምረጡ።");
+    }
+  }
+
+  // ========== Login ==========
+  async function handleLogin() {
+    const p = document.getElementById("pinInput");
+    if (!p) return;
+    const result = await SBM.auth.verifyPin(p.value);
+    if (result.locked) {
+      const secs = Math.ceil(result.remainingMs / 1000);
+      showToast(`በጣም ብዙ ስህተት ተከስቷል! እባክዎ ${secs} ሰከንድ ይጠብቁ ⏳`);
+      p.value = "";
+      return;
+    }
+    if (result.ok) {
+      document.getElementById("loginScreen").classList.add("hidden");
+      document.getElementById("appShell").classList.remove("hidden");
+      document.getElementById("headerCompName").innerText = SBM.DB.companyName;
+      renderDashboardMenu();
+      showToast("እንኳን ደህና መጡ!");
+    } else {
+      showToast(`የተሳሳተ ፒን (PIN) ነው! (${result.attemptsLeft} ተጨማሪ ሙከራ ይቀራል)`);
+      p.value = "";
+    }
+  }
+  function handleLogout() {
+    document.getElementById("appShell").classList.add("hidden");
+    document.getElementById("loginScreen").classList.remove("hidden");
+    document.getElementById("pinInput").value = "";
+  }
+
+  // ========== Forgot PIN (recovery-code based, no plaintext reset) ==========
+  async function forgotPIN() {
+    const code = prompt("🔑 የመልሶ ማግኛ ኮድ (Recovery Code) ያስገቡ፡\n(ፒን ሲፈጥሩ/ሲቀይሩ አንድ ጊዜ ታይቶ የነበረ ኮድ)");
+    if (!code) return;
+    const valid = await SBM.auth.verifyRecoveryCode(code);
+    if (!valid) return showToast("የመልሶ ማግኛ ኮዱ ትክክል አይደለም! ❌");
+    const newPin = prompt("አዲስ ፒን ያስገቡ (ቢያንስ 4 አሃዝ)፡");
+    if (!newPin || newPin.trim().length < 4) return showToast("ትክክለኛ ፒን አላስገቡም!");
+    const recoveryCode = await SBM.auth.setPin(newPin.trim());
+    alert("✅ ፒን ተቀናብሯል!\n\n📝 አዲስ የመልሶ ማግኛ ኮድ፦\n\n" + recoveryCode + "\n\nይህንን ጽፈው ያስቀምጡ — ዳግም አይታይም!");
+  }
+
+  // ========== Activation ==========
+  async function tryActivate() {
+    const shop = (document.getElementById("actShop").value || "").trim();
+    const key = (document.getElementById("actCode").value || "").trim();
+    if (!shop || !key) return alert("የሱቁን ስም እና የፍቃድ ኮድ ያስገቡ!");
+    const result = await SBM.activation.activate(shop, key);
+    if (!result.ok) {
+      const reasons = {
+        "bad-format": "የፍቃድ ኮዱ ቅርጸት ትክክል አይደለም።",
+        "bad-signature": "የፍቃድ ኮዱ ልክ አይደለም (ፊርማ አልተረጋገጠም)።",
+        "shop-mismatch": "ይህ ፍቃድ ለዚህ የሱቅ ስም አይሰራም። የሱቁን ስም በትክክል ያስገቡ።",
+        "expired": "የፍቃድ ኮዱ ጊዜው አልፎበታል።",
+        "malformed": "የፍቃድ ኮዱ ሊነበብ አልቻለም።",
+      };
+      showToast("❌ " + (reasons[result.reason] || "ማንቃት አልተሳካም።"));
+      return;
+    }
+    document.getElementById("activationScreen").classList.add("hidden");
+
+    if (!SBM.auth.isPinSet()) {
+      // First-time setup: ask the shop owner to choose their own PIN instead
+      // of shipping a default "1234" that everyone who reads the code knows.
+      let newPin = prompt("🔑 አዲስ ፒን (ቢያንስ 4 አሃዝ) ይምረጡ፦");
+      while (!newPin || newPin.trim().length < 4) {
+        newPin = prompt("ፒኑ ቢያንስ 4 አሃዝ ሊሆን ይገባል። እንደገና ይሞክሩ፦");
+        if (newPin === null) { newPin = "0000"; break; }
+      }
+      const recoveryCode = await SBM.auth.setPin(newPin.trim());
+      alert("✅ ተነቃቅቷል!\n\n📝 የመልሶ ማግኛ ኮድ (Recovery Code)፦\n\n" + recoveryCode + "\n\n⚠️ ፒንዎን ቢረሱ ብቻ የሚያስፈልግዎ ነው። በወረቀት ላይ ጽፈው በጥንቃቄ ያስቀምጡት — ዳግም አይታይም!");
+    }
+    document.getElementById("loginScreen").classList.remove("hidden");
+    showToast("ተነቃቅቷል! እንኳን ደህና መጡ ✅");
+  }
+
+  // ========== Bootstrap ==========
+  document.addEventListener("DOMContentLoaded", async function () {
+    SBM.database.loadAll();
+    document.body.className = SBM.DB.theme;
+
+    // Cloud backup: initialize Firebase (no-op safely if SDK/network unavailable),
+    // then offer to restore from the cloud if this device's local data is empty
+    // (e.g. a brand-new phone activated with an existing shop's license key).
+    if (SBM.sync) {
+      SBM.sync.init();
+      SBM.sync.offerRestoreIfEmpty();
+    }
+
+    const tp = document.getElementById("togglePinBtn");
+    if (tp) tp.addEventListener("click", function () {
+      const p = document.getElementById("pinInput");
+      if (!p) return;
+      if (p.type === "password") { p.type = "text"; tp.textContent = "ደብቅ"; }
+      else { p.type = "password"; tp.textContent = "ግልጽ"; }
+    });
+
+    const ov = document.getElementById("modalOverlay");
+    if (ov) ov.addEventListener("click", (e) => { if (e.target === ov) closeModal(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
+    const header = document.querySelector(".modal-header");
+    if (header && !document.getElementById("shareBtn")) {
+      const b = document.createElement("button");
+      b.id = "shareBtn"; b.type = "button"; b.className = "icon-btn";
+      b.style.fontSize = "18px"; b.innerText = "📤";
+      b.onclick = shareCurrentPage;
+      header.insertBefore(b, header.lastElementChild);
+    }
+
+    const activated = await SBM.activation.isActivated();
+
+    setTimeout(function () {
+      const s = document.getElementById("splashScreen");
+      if (s) s.classList.add("hidden");
+      if (!activated) {
+        const act = document.getElementById("activationScreen");
+        if (act) act.classList.remove("hidden");
+      } else {
+        const l = document.getElementById("loginScreen");
+        if (l) l.classList.remove("hidden");
+      }
+    }, 1000);
+  });
+
+  global.SBM.app = {
+    openPage, closeModal, toggleTheme, printModalContent, shareCurrentPage,
+    handleLogin, handleLogout, forgotPIN, tryActivate, renderDashboardMenu,
+  };
+  window.print = printModalContent;
+})(window);
+
+
+// ==== auth.js ====
+/**
+ * auth.js
+ * ---------------------------------------------------------------------------
+ * PIN ማረጋገጫ ስርዓት — Web Crypto API (SHA-256, salted) ተጠቅሞ
+ *
+ * ማንኛውም ቦታ ላይ PIN በGLIB TEXT (Plain Text) አይቀመጥም/አይነበብም።
+ * DB export/backup ውስጥም አይካተትም (ይህ ፋይል ራሱን ችሎ የራሱ storage namespace አለው)።
+ *
+ * ⚠️ ገደብ (Honesty note, see requirement #9 / README-SECURITY.md)፦
+ * ይህ ሁሉ ኮድ በራሱ Browser ውስጥ ስለሚሮጥ፣ ማንኛውም ተጠቃሚ Developer Tools ከፍቶ
+ * ይህንኑ ኮድ ማንበብ/ማስተካከል ይችላል። Salted hashing የሚከላከለው "ቀላል ጥቃቶችን"
+ * (ለምሳሌ rainbow table, plain-text ንባብ) እንጂ በራሱ browser ላይ ሙሉ ቁጥጥር
+ * ያለውን ተጠቃሚ ማስቆም አይችልም። ይህ ያለ backend ሊፈታ የማይችል ውስንነት ነው።
+ * ---------------------------------------------------------------------------
+ */
+(function (global) {
+  "use strict";
+
+  const SEC_PREFIX = "sbm_sec_"; // Isolated from business-data keys in database.js.
+
+  const K_PIN_HASH = SEC_PREFIX + "pinHash";
+  const K_PIN_SALT = SEC_PREFIX + "pinSalt";
+  const K_RECOVERY_HASH = SEC_PREFIX + "recoveryHash";
+  const K_ATTEMPTS = SEC_PREFIX + "attempts";
+  const K_LOCK_UNTIL = SEC_PREFIX + "lockUntil";
+
+  const MAX_ATTEMPTS = 5;
+  const BASE_LOCK_MS = 30 * 1000;      // 30 ሰከንድ
+  const MAX_LOCK_MS = 10 * 60 * 1000;  // 10 ደቂቃ ጣሪያ
+
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* ignore quota errors */ } }
+  function lsRemove(k) { try { localStorage.removeItem(k); } catch (e) {} }
+
+  // ---------- Web Crypto helpers ----------
+
+  function bufToHex(buf) {
+    return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  function randomSaltHex(bytes = 16) {
+    const arr = new Uint8Array(bytes);
+    crypto.getRandomValues(arr);
+    return bufToHex(arr);
+  }
+
+  async function sha256Hex(text) {
+    const data = new TextEncoder().encode(text);
+    const digest = await crypto.subtle.digest("SHA-256", data);
+    return bufToHex(digest);
+  }
+
+  async function hashWithSalt(value, saltHex) {
+    // Salted hash: SHA-256(salt + ":" + value). Simple but standard practice
+    // for client-only apps where a full KDF (PBKDF2/Argon2) offers no real
+    // extra protection since the verifying code is visible to the user anyway.
+    return sha256Hex(saltHex + ":" + String(value));
+  }
+
+  function constantTimeEqual(a, b) {
+    if (typeof a !== "string" || typeof b !== "string" || a.length !== b.length) return false;
+    let diff = 0;
+    for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    return diff === 0;
+  }
+
+  // ---------- PIN lifecycle ----------
+
+  function isPinSet() {
+    return !!lsGet(K_PIN_HASH);
+  }
+
+  /** Sets (or resets) the PIN. Returns a one-time recovery code the caller MUST show once. */
+  async function setPin(newPin) {
+    const salt = randomSaltHex();
+    const hash = await hashWithSalt(newPin, salt);
+    lsSet(K_PIN_SALT, salt);
+    lsSet(K_PIN_HASH, hash);
+    lsSet(K_ATTEMPTS, "0");
+    lsRemove(K_LOCK_UNTIL);
+
+    // Recovery code: shown ONCE to the shop owner (e.g. "ወረቀት ላይ ጻፉት!").
+    // Needed because a salted hash cannot be reversed — if the PIN is
+    // forgotten there is no "decrypt" option, only a guarded reset path.
+    const recoveryCode = randomSaltHex(4).toUpperCase(); // 8-char code
+    const recoverySalt = randomSaltHex();
+    const recoveryHash = await hashWithSalt(recoveryCode, recoverySalt);
+    lsSet(SEC_PREFIX + "recoverySalt", recoverySalt);
+    lsSet(K_RECOVERY_HASH, recoveryHash);
+
+    return recoveryCode;
+  }
+
+  function getLockRemainingMs() {
+    const until = parseInt(lsGet(K_LOCK_UNTIL) || "0", 10);
+    const remaining = until - Date.now();
+    return remaining > 0 ? remaining : 0;
+  }
+
+  function registerFailedAttempt() {
+    const attempts = parseInt(lsGet(K_ATTEMPTS) || "0", 10) + 1;
+    lsSet(K_ATTEMPTS, String(attempts));
+    if (attempts >= MAX_ATTEMPTS) {
+      const overBy = attempts - MAX_ATTEMPTS;
+      const lockMs = Math.min(BASE_LOCK_MS * Math.pow(2, overBy), MAX_LOCK_MS);
+      lsSet(K_LOCK_UNTIL, String(Date.now() + lockMs));
+    }
+  }
+
+  function clearAttempts() {
+    lsSet(K_ATTEMPTS, "0");
+    lsRemove(K_LOCK_UNTIL);
+  }
+
+  /**
+   * Verifies a PIN attempt.
+   * Returns { ok, locked, remainingMs, attemptsLeft }
+   */
+  async function verifyPin(pin) {
+    const remaining = getLockRemainingMs();
+    if (remaining > 0) {
+      return { ok: false, locked: true, remainingMs: remaining, attemptsLeft: 0 };
+    }
+    const salt = lsGet(K_PIN_SALT);
+    const storedHash = lsGet(K_PIN_HASH);
+    if (!salt || !storedHash) {
+      return { ok: false, locked: false, remainingMs: 0, attemptsLeft: MAX_ATTEMPTS, notSet: true };
+    }
+    const attemptHash = await hashWithSalt(pin, salt);
+    const ok = constantTimeEqual(attemptHash, storedHash);
+    if (ok) {
+      clearAttempts();
+      return { ok: true, locked: false, remainingMs: 0, attemptsLeft: MAX_ATTEMPTS };
+    }
+    registerFailedAttempt();
+    const attempts = parseInt(lsGet(K_ATTEMPTS) || "0", 10);
+    const lockedNow = getLockRemainingMs() > 0;
+    return {
+      ok: false,
+      locked: lockedNow,
+      remainingMs: getLockRemainingMs(),
+      attemptsLeft: Math.max(0, MAX_ATTEMPTS - attempts),
+    };
+  }
+
+  /** Recovery flow: verify recovery code, then allow setting a brand-new PIN. */
+  async function verifyRecoveryCode(code) {
+    const salt = lsGet(SEC_PREFIX + "recoverySalt");
+    const storedHash = lsGet(K_RECOVERY_HASH);
+    if (!salt || !storedHash) return false;
+    const attemptHash = await hashWithSalt(code.trim().toUpperCase(), salt);
+    return constantTimeEqual(attemptHash, storedHash);
+  }
+
+  async function changePin(oldPin, newPin) {
+    const check = await verifyPin(oldPin);
+    if (!check.ok) return { ok: false, reason: "wrong-old-pin" };
+    const recoveryCode = await setPin(newPin);
+    return { ok: true, recoveryCode };
+  }
+
+  global.SBM = global.SBM || {};
+  global.SBM.auth = {
+    isPinSet,
+    setPin,
+    verifyPin,
+    verifyRecoveryCode,
+    changePin,
+    getLockRemainingMs,
+    sha256Hex,   // exposed for activation.js / backup.js integrity checks
+    hashWithSalt,
+    randomSaltHex,
+  };
+})(window);
+
+
+// ==== activation.js ====
+/**
+ * activation.js
+ * ---------------------------------------------------------------------------
+ * License / Activation ስርዓት — ECDSA (P-256) Digital Signature ተጠቅሞ
+ *
+ * እንዴት ይሰራል፦
+ *  1) አንተ (ገንቢው) አንድ ጊዜ ብቻ የ"ግል ቁልፍ/Private Key" እና "የህዝብ ቁልፍ/Public Key"
+ *     ጥንድ በ dev-tools/keygen.html ትፈጥራለህ (ከዚህ app ውጪ፣ ኮምፒውተር ላይ ብቻ)።
+ *  2) Private Key ላንተ ብቻ የሚታይ ሆኖ ደህንነቱ በተጠበቀ ቦታ ትቀምጠዋለህ (ለምሳሌ
+ *     ላፕቶፕህ ላይ ባለ ፋይል፣ ማንም ደንበኛ አያገኘውም)።
+ *  3) Public Key ግን "ሚስጥር" አይደለም — በዚህ ፋይል ውስጥ በነጻነት ይካተታል፣ ምክንያቱም
+ *     Public Key ብቻውን ምንም ማምረት/ማጭበርበር አይችልም፤ የፊርማ ማረጋገጫ ብቻ ነው የሚያደርገው።
+ *  4) ለእያንዳንዱ ደንበኛ የሱቅ ስም + (በፈለግክ ጊዜ የማብቂያ ቀን) ፈርመህ የፍቃድ ኮድ
+ *     (License Key) ትሰጠዋለህ። ደንበኛው ያንን ኮድ አፑ ውስጥ ሲያስገባ፣ አፑ Public Key
+ *     ተጠቅሞ ፊርማውን ያረጋግጣል — ያለ ኢንተርኔት፣ ያለ Backend!
+ *
+ * ለምን ከድሮው የተሻለ ነው? ድሮ የነበረው ስርዓት አንድ Hard-coded "ሚስጥር ቃል"
+ * (SELLER_MASTER) በራሱ በ app.js ውስጥ ይዞ ነበር — ያንን ኮድ ያነበበ ሁሉ የራሱን
+ * የማንቃት ኮድ መፍጠር ይችል ነበር። አሁን ግን የፊርማ ማረጋገጫ ቁልፍ (Public Key) ብቻ
+ * እዚህ አለ፤ አዲስ ፍቃድ ለመፍጠር የሚያስፈልገው Private Key ግን ፈጽሞ በዚህ app ውስጥ
+ * የለም — ስለዚህ ማንም ደንበኛ ወይም ሶስተኛ ወገን የራሱን ፍቃድ መፍጠር አይችልም።
+ * ---------------------------------------------------------------------------
+ */
+(function (global) {
+  "use strict";
+
+  const SEC_PREFIX = "sbm_sec_";
+  const K_ACTIVATION = SEC_PREFIX + "activation";
+
+  const PUBLIC_KEY_JWK = {
+    crv: "P-256",
+    ext: true,
+    key_ops: ["verify"],
+    kty: "EC",
+    x: "jQoVEAJdRY4CWWBvn8uJk9PXhNaZfukXLPPrH6LtKq4",
+    y: "ZwMBRzPCaXLW6HX1ksT5FYi6x9NVAIc-ElS5fm2W8A4",
+  };
+
+  let cachedPublicKey = null;
+  async function getPublicKey() {
+    if (cachedPublicKey) return cachedPublicKey;
+    cachedPublicKey = await crypto.subtle.importKey(
+      "jwk",
+      PUBLIC_KEY_JWK,
+      { name: "ECDSA", namedCurve: "P-256" },
+      true,
+      ["verify"]
+    );
+    return cachedPublicKey;
+  }
+
+  function b64ToBuf(b64) {
+    const bin = atob(b64.replace(/-/g, "+").replace(/_/g, "/"));
+    const buf = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+    return buf.buffer;
+  }
+
+  /**
+   * License key format (produced by dev-tools/keygen.html):
+   *   base64url(JSON payload) + "." + base64url(ECDSA signature)
+   * payload = { shop: "<lowercased trimmed shop name>", exp: <unix ms or 0>, nonce: "<random>" }
+   */
+  async function verifyLicenseKey(shopName, licenseKey) {
+    try {
+      const parts = String(licenseKey || "").trim().split(".");
+      if (parts.length !== 2) return { ok: false, reason: "bad-format" };
+      const [payloadB64, sigB64] = parts;
+      const payloadBuf = b64ToBuf(payloadB64);
+      const payloadJson = new TextDecoder().decode(payloadBuf);
+      const payload = JSON.parse(payloadJson);
+
+      const pubKey = await getPublicKey();
+      const isValidSig = await crypto.subtle.verify(
+        { name: "ECDSA", hash: "SHA-256" },
+        pubKey,
+        b64ToBuf(sigB64),
+        payloadBuf
+      );
+      if (!isValidSig) return { ok: false, reason: "bad-signature" };
+
+      const normalizedShop = String(shopName || "").trim().toLowerCase();
+      if (payload.shop !== normalizedShop) return { ok: false, reason: "shop-mismatch" };
+
+      if (payload.exp && Date.now() > payload.exp) return { ok: false, reason: "expired" };
+
+      return { ok: true, payload };
+    } catch (e) {
+      return { ok: false, reason: "malformed" };
+    }
+  }
+
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function lsRemove(k) { try { localStorage.removeItem(k); } catch (e) {} }
+
+  async function isActivated() {
+    const raw = lsGet(K_ACTIVATION);
+    if (!raw) return false;
+    let record;
+    try { record = JSON.parse(raw); } catch (e) { return false; }
+    if (!record || !record.shop || !record.licenseKey) return false;
+
+    const check = await verifyLicenseKey(record.shop, record.licenseKey);
+    return check.ok;
+  }
+
+  async function activate(shopName, licenseKey) {
+    const check = await verifyLicenseKey(shopName, licenseKey);
+    if (!check.ok) return check;
+    lsSet(K_ACTIVATION, JSON.stringify({
+      shop: String(shopName).trim().toLowerCase(),
+      shopDisplay: String(shopName).trim(),
+      licenseKey: String(licenseKey).trim(),
+      activatedAt: new Date().toISOString(),
+    }));
+    return { ok: true, payload: check.payload };
+  }
+
+  function getActivationRecord() {
+    const raw = lsGet(K_ACTIVATION);
+    if (!raw) return null;
+    try { return JSON.parse(raw); } catch (e) { return null; }
+  }
+
+  function deactivate() {
+    lsRemove(K_ACTIVATION);
+  }
+
+  global.SBM = global.SBM || {};
+  global.SBM.activation = {
+    isActivated,
+    activate,
+    getActivationRecord,
+    deactivate,
+    verifyLicenseKey,
+  };
+})(window);
+
+
+// ==== sync.js ====
+/**
+ * sync.js — Firebase (Firestore) Cloud Backup
+ * ---------------------------------------------------------------------------
+ * ግብ፦ ስልኩ ቢጠፋ/ቢበላሽ፣ ደንበኛው በአዲስ ስልክ ተመሳሳይ License Key ገብቶ ዳታውን
+ * ከደመና መልሶ እንዲያገኝ ማድረግ።
+ *
+ * ⚠️ localStorage ሁልጊዜ "ዋናው እውነት" ነው። ይህ ፋይል ኢንተርኔት ካለ ብቻ በተጨማሪ
+ * (background) ወደ ደመና ይጽፋል/ያነባል — ኢንተርኔት ከሌለ ወይም Firebase ቢወድቅ
+ * እንኳ፣ አፑ በተለመደው (localStorage) ይቀጥላል፣ ምንም አይቆምም።
+ *
+ * ⚠️ የደህንነት ማስታወሻ፦ Firestore አሁን "Test mode" ላይ ስለሆነ ለ30 ቀናት ብቻ ክፍት
+ * ነው። ከ30 ቀናት በኋላ Security Rules ካልተዋቀረ፣ ንባብ/ጽሁፍ ይታገዳል። ይህንን
+ * በሚቀጥለው ደረጃ አብረን እናስተካክለዋለን።
+ * ---------------------------------------------------------------------------
+ */
+(function (global) {
+  "use strict";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAbnrKTbFhsrVwg_pbP4WSp1mb3LDyKK3o",
+    authDomain: "smartbizpro-c982d.firebaseapp.com",
+    projectId: "smartbizpro-c982d",
+    storageBucket: "smartbizpro-c982d.firebasestorage.app",
+    messagingSenderId: "422730315642",
+    appId: "1:422730315642:web:638f633371ca69894f48c3",
+  };
+
+  let db = null;
+  let ready = false;
+  let pushTimer = null;
+
+  function init() {
+    // 🔇 ሙሉ በሙሉ ጸጥ ያለ (silent) ነው፦ ወደ ደመና መላክ/ማንበብ ለሻጩ በምንም መልኩ
+    // አይታይም (toast የለም)። ችግር ካጋጠመ console ውስጥ ብቻ ነው የሚመዘገበው (developer
+    // ብቻ Devtools ከፍቶ ሊያየው ይችላል)። ይህ ሆን ተብሎ ነው — ሻጩ ውሂቡ ወዴት እንደሚላክ
+    // እያየ ግራ እንዳይጋባ/እንዳይጠረጥር (ለምሳሌ ተወዳዳሪ/ስተመር ነገር ይመስለው ይሆናል ብሎ
+    // እንዳይሰጋ) ብለን ነው ጸጥ ያደረግነው። ራሱ localStorage ላይ ያለው ዳታ ግን ሁልጊዜ
+    // ትክክለኛ ነው — ደመናው background copy ብቻ ነው።
+    try {
+      if (!global.firebase) {
+        console.warn("sync.js: Firebase SDK not loaded, cloud backup disabled");
+        return;
+      }
+      firebase.initializeApp(firebaseConfig);
+      firebase.auth().signInAnonymously().catch((e) => {
+        console.warn("sync.js: anon auth failed", e);
+      });
+      db = firebase.firestore();
+      ready = true;
+    } catch (e) {
+      console.warn("sync.js: init failed", e);
+    }
+  }
+
+  function getShopId() {
+    const rec = (global.SBM && SBM.activation && SBM.activation.getActivationRecord)
+      ? SBM.activation.getActivationRecord() : null;
+    return rec && rec.shop ? rec.shop : null;
+  }
+
+  async function pushToCloudNow() {
+    if (!ready || !db) return;
+    if (typeof navigator !== "undefined" && navigator.onLine === false) return;
+    const shopId = getShopId();
+    if (!shopId) return;
+    try {
+      const snapshot = SBM.database.exportSnapshot();
+      await db.collection("shops").doc(shopId).set({
+        data: snapshot,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      console.warn("sync.js: cloud push failed (will retry on next change)", e);
+    }
+  }
+
+  /** Debounced push — called frequently (every save), but only actually sends after 3s of quiet. */
+  function schedulePush() {
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(pushToCloudNow, 3000);
+  }
+
+  async function pullFromCloud() {
+    if (!ready || !db) return null;
+    const shopId = getShopId();
+    if (!shopId) return null;
+    try {
+      const doc = await db.collection("shops").doc(shopId).get();
+      if (doc.exists) return doc.data().data;
+      return null;
+    } catch (e) {
+      console.warn("sync.js: cloud pull failed", e);
+      return null;
+    }
+  }
+
+  function isLocalDataEmpty() {
+    const DB = SBM.DB;
+    return (!DB.stock || DB.stock.length === 0)
+      && (!DB.sales || DB.sales.length === 0)
+      && (!DB.credits || DB.credits.length === 0);
+  }
+
+  /**
+   * Restore is now gated behind a code issued by the developer (Abdulaziz) —
+   * not automatic. This is deliberate: it means switching a shop's data to a
+   * new phone always routes through the developer (support touchpoint),
+   * rather than happening silently on its own.
+   *
+   * The restore code = SHA-256("SBM-RESTORE:" + shopId) truncated to 8 hex
+   * chars, uppercased. The developer computes this once per shop (e.g. via
+   * dev-tools) and gives it to the customer only when they contact him about
+   * a lost/replaced phone. It is NOT shown anywhere inside the app itself.
+   */
+  async function computeRestoreCode(shopId) {
+    const hashHex = await SBM.auth.sha256Hex("SBM-RESTORE:" + shopId);
+    return hashHex.slice(0, 8).toUpperCase();
+  }
+
+  /** Called on app boot. Local data being empty just surfaces a prompt asking
+   * for the restore code — it never restores automatically on its own. */
+  async function offerRestoreIfEmpty() {
+    if (!ready) return;
+    if (!isLocalDataEmpty()) return;
+    const shopId = getShopId();
+    if (!shopId) return;
+
+    const cloudData = await pullFromCloud();
+    if (!cloudData) return; // nothing to restore, stay quiet
+
+    const wantsRestore = confirm("በደመና ላይ ቀደም ብሎ የተቀመጠ የዚህ ሱቅ ዳታ ተገኝቷል። ዳታውን መልሰው ማግኘት ይፈልጋሉ? (ለዚህ ካንተ ሻጭ የተሰጠዎት ልዩ ኮድ ያስፈልጋል)");
+    if (!wantsRestore) return;
+
+    const code = prompt("🔑 የመልሶ ማግኛ ኮድ (Restore Code) ያስገቡ፡\n(ስልክዎ ስለተቀየረ ከሻጭዎ ያግኙት)");
+    if (!code) return;
+
+    const expected = await computeRestoreCode(shopId);
+    if (String(code).trim().toUpperCase() !== expected) {
+      if (SBM.utils && SBM.utils.showToast) SBM.utils.showToast("ኮዱ ትክክል አይደለም። ❌");
+      return;
+    }
+
+    SBM.database.importSnapshot(cloudData);
+    if (SBM.utils && SBM.utils.showToast) SBM.utils.showToast("ዳታ ከደመና ተመልሷል! ✅");
+    if (SBM.app && SBM.app.renderDashboardMenu) SBM.app.renderDashboardMenu();
+  }
+
+  /** Manual "restore now" for the Backup page — same restore-code gate applies. */
+  async function manualRestore() {
+    const shopId = getShopId();
+    if (!shopId) return;
+    const cloudData = await pullFromCloud();
+    if (!cloudData) {
+      if (SBM.utils && SBM.utils.showToast) SBM.utils.showToast("በደመና ላይ ምንም የተቀመጠ ዳታ አልተገኘም።");
+      return;
+    }
+    const code = prompt("🔑 የመልሶ ማግኛ ኮድ (Restore Code) ያስገቡ፡\n(ከሻጭዎ ያግኙት)");
+    if (!code) return;
+    const expected = await computeRestoreCode(shopId);
+    if (String(code).trim().toUpperCase() !== expected) {
+      if (SBM.utils && SBM.utils.showToast) SBM.utils.showToast("ኮዱ ትክክል አይደለም። ❌");
+      return;
+    }
+    if (!confirm("ማስጠንቀቂያ፡ የአሁኑ ዳታ በደመና ላይ ባለው ይተካል። ይቀጥሉ?")) return;
+    SBM.database.importSnapshot(cloudData);
+    if (SBM.utils && SBM.utils.showToast) SBM.utils.showToast("ዳታ ከደመና ተመልሷል! ✅");
+  }
+
+  global.SBM = global.SBM || {};
+  global.SBM.sync = { init, pushToCloud: schedulePush, pushNow: pushToCloudNow, pullFromCloud, offerRestoreIfEmpty, manualRestore, computeRestoreCode, getShopId };
+})(window);
+
+
+// ==== stock.js ====
+/**
+ * stock.js — የዕቃዎች መዝገብ (Stock, FIFO batches, Purchase-Type based Unit conversion)
+ *
+ * ⚖️ የመግዣ ዓይነት (Purchase Type) አያያዝ፦
+ * እያንዳንዱ ዕቃ ሲመዘገብ "የግዢ ዓይነት" ይመረጣል፦ ኩንታል / ካርቶን / ደርዘን / ፍሬ (ነጠላ)።
+ * ይህ ምርጫ የሚወስነው፦ (1) ስቶክ በምን ትንሽ አሃድ እንደሚቀመጥ (ኪሎ/ፍሬ)፣ (2) ለንባብ
+ * ምቹ እንዲሆን በስቶክ ሰንጠረዥ ላይ "X ኩንታል ከ Y ኪሎ ቀሪ" ተብሎ እንዴት እንደሚታይ።
+ *
+ * ውስጣዊ ማከማቻ ግን ሁልጊዜ በትንሹ አሃድ (ኪሎ/ፍሬ) ነው — ይሄ ስሌቶች (ትርፍ፣ ቀሪ ስቶክ)
+ * ሁልጊዜ ትክክለኛ እንዲሆኑ ያደርጋል፣ ገበያተኛው በኩንታልም በኪሎም ቢገዛ ልዩነት የለውም።
+ */
+(function (global) {
+  "use strict";
+  const { DB } = SBM;
+  const { escapeHTML, showToast } = SBM.utils;
+
+  function renderUI() {
+    const list = DB.stock || [];
+    return `
+      <input type="text" class="search-bar" placeholder="🔍 እቃ/ብራንድ መፈለጊያ..." onkeyup="SBM.stock.filter(this.value)">
+      <div class="form-group"><label>የዕቃው ስም</label><input type="text" id="stkName"></div>
+
+      <div class="form-group"><label>የግዢ ዓይነት</label>
+        <select id="stkPurchaseType" onchange="SBM.stock.togglePurchaseType()">
+          <option value="quintal">ኩንታል</option>
+          <option value="carton">ካርቶን</option>
+          <option value="dozen">ደርዘን</option>
+          <option value="crate">ካሳ</option>
+          <option value="piece">ፍሬ (ነጠላ)</option>
+        </select>
+      </div>
+
+      <div id="stkQuintalFields">
+        <div class="form-group"><label>1 ኩንታል ስንት ኪሎ ይይዛል?</label><input type="number" id="stkQuintalKg" value="100"></div>
+        <div class="form-group"><label>ስንት ኩንታል ገዙ?</label><input type="number" id="stkQuintalCount" placeholder="ብዛት ያስገቡ"></div>
+        <div class="form-group"><label>የአንዱ ኩንታል ዋጋ (ETB)</label><input type="number" id="stkQuintalPrice" placeholder="ዋጋ ያስገቡ"></div>
+      </div>
+
+      <div id="stkCartonFields" class="hidden">
+        <div class="form-group"><label>ስንት ካርቶን ገዙ?</label><input type="number" id="stkCartonCount" placeholder="ብዛት ያስገቡ"></div>
+        <div class="form-group"><label>የአንዱ ካርቶን ዋጋ (ETB)</label><input type="number" id="stkCartonPrice" placeholder="ዋጋ ያስገቡ"></div>
+      </div>
+
+      <div id="stkDozenFields" class="hidden">
+        <p style="font-size:12px;color:var(--secondary);">1 ደርዘን = 12 ፍሬ (ራሱ ይታወቃል)</p>
+        <div class="form-group"><label>ስንት ደርዘን ገዙ?</label><input type="number" id="stkDozenCount" placeholder="ብዛት ያስገቡ"></div>
+        <div class="form-group"><label>የአንዱ ደርዘን ዋጋ (ETB)</label><input type="number" id="stkDozenPrice" placeholder="ዋጋ ያስገቡ"></div>
+      </div>
+
+      <div id="stkCrateFields" class="hidden">
+        <div class="form-group"><label>ካሳው ስንት ፍሬ ይይዛል?</label><input type="number" id="stkCratePieces" placeholder="ለምሳሌ 24"></div>
+        <div class="form-group"><label>ስንት ካሳ ገዙ?</label><input type="number" id="stkCrateCount" placeholder="ብዛት ያስገቡ"></div>
+        <div class="form-group"><label>የአንዱ ካሳ ዋጋ (ETB)</label><input type="number" id="stkCratePrice" placeholder="ዋጋ ያስገቡ"></div>
+      </div>
+
+      <div id="stkPieceFields" class="hidden">
+        <div class="form-group"><label>የመሸጫ አሃድ</label><input type="text" id="stkPieceUnit" value="ፍሬ" placeholder="ፍሬ"></div>
+        <div style="display:flex;gap:10px;">
+          <div class="form-group" style="flex:1"><label>ብዛት</label><input type="number" id="stkPieceQty"></div>
+          <div class="form-group" style="flex:1"><label>የአንዱ መግዣ ዋጋ (ETB)</label><input type="number" id="stkPiecePrice"></div>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="SBM.stock.add()">+ አዲስ ዕቃ መዝግብ</button>
+      <div style="max-height:220px;overflow-y:auto;margin-top:15px;">
+        <table><thead><tr><th>ስም</th><th>ጠቅላላ ብዛት</th><th>የቅርብ መግዣ ዋጋ</th><th>ድርጊት</th></tr></thead>
+        <tbody id="stockTableBody">${generateRows(list)}</tbody></table>
+      </div>`;
+  }
+
+  function togglePurchaseType() {
+    const type = document.getElementById("stkPurchaseType").value;
+    document.getElementById("stkQuintalFields").classList.toggle("hidden", type !== "quintal");
+    document.getElementById("stkCartonFields").classList.toggle("hidden", type !== "carton");
+    document.getElementById("stkDozenFields").classList.toggle("hidden", type !== "dozen");
+    document.getElementById("stkCrateFields").classList.toggle("hidden", type !== "crate");
+    document.getElementById("stkPieceFields").classList.toggle("hidden", type !== "piece");
+  }
+
+  /** Formats a small-unit quantity back into "X bulkUnit ከ Y unit ቀሪ" when a bulk grouping exists. */
+  function formatQty(item) {
+    const unit = escapeHTML(item.unit || "ፍሬ");
+    const bulkUnit = item.bulkUnit;
+    const conv = item.bulkConversion || 1;
+    if (!bulkUnit || conv <= 1) return `${item.qty} ${unit}`;
+    const bulkCount = Math.floor(item.qty / conv);
+    const remainder = Math.round((item.qty - bulkCount * conv) * 100) / 100;
+    if (remainder > 0) return `${bulkCount} ${escapeHTML(bulkUnit)} ከ${remainder} ${unit} ቀሪ`;
+    return `${bulkCount} ${escapeHTML(bulkUnit)}`;
+  }
+
+  function generateRows(list) {
+    if (!list || list.length === 0) return '<tr><td colspan="4" style="text-align:center;">ምንም ዕቃ አልተመዘገበም</td></tr>';
+    return list.map((item) => {
+      const last = (item.batches && item.batches.length > 0) ? item.batches[item.batches.length - 1].buyPrice : (item.buyPrice || 0);
+      const unit = escapeHTML(item.unit || "ፍሬ");
+      return `<tr><td><b>${escapeHTML(item.name)}</b> ${item.qty <= 5 ? '<span style="color:red;">(አልቋል!)</span>' : ''}</td>
+        <td>${formatQty(item)}</td><td>${Number(last).toFixed(2)} ETB/${unit}</td>
+        <td class="action-btns">
+          <button class="btn-success" onclick="SBM.stock.restock(${item.id})">+ጫን</button>
+          <button class="btn-secondary" onclick="SBM.stock.edit(${item.id})">✏️</button>
+          <button class="btn-danger" onclick="SBM.stock.remove(${item.id})">🗑️</button>
+        </td></tr>`;
+    }).join("");
+  }
+
+  function filter(q) {
+    const f = (DB.stock || []).filter((i) => i.name.toLowerCase().includes(q.toLowerCase()));
+    const b = document.getElementById("stockTableBody");
+    if (b) b.innerHTML = generateRows(f);
+  }
+
+  function saveItem(name, unit, bulkUnit, bulkConversion, qty, buy) {
+    let ex = DB.stock.find((i) => i.name.trim().toLowerCase() === name.toLowerCase());
+    if (ex) {
+      ex.qty += qty;
+      if (!ex.batches) ex.batches = [];
+      ex.batches.push({ qty, buyPrice: buy });
+      ex.buyPrice = buy;
+      if (!ex.unit) ex.unit = unit;
+      if (!ex.bulkUnit) { ex.bulkUnit = bulkUnit; ex.bulkConversion = bulkConversion; }
+    } else {
+      DB.stock.push({ id: Date.now(), name, unit, bulkUnit, bulkConversion, qty, buyPrice: buy, batches: [{ qty, buyPrice: buy }] });
+    }
+    SBM.database.save("stock");
+    showToast(`እቃው ተመዝግቧል! (${Number(buy).toFixed(2)} ETB/${escapeHTML(unit)})`);
+    SBM.app.openPage("stock");
+  }
+
+  function add() {
+    const name = (document.getElementById("stkName").value || "").trim();
+    const type = document.getElementById("stkPurchaseType").value;
+    if (!name) return alert("እባክዎን የዕቃ ስም ያስገቡ!");
+
+    if (type === "quintal") {
+      const kgPerQuintal = parseFloat(document.getElementById("stkQuintalKg").value) || 100;
+      const count = parseFloat(document.getElementById("stkQuintalCount").value) || 0;
+      const price = parseFloat(document.getElementById("stkQuintalPrice").value) || 0;
+      if (count <= 0 || price <= 0) return alert("እባክዎን ትክክለኛ የኩንታል ብዛት እና ዋጋ ያስገቡ!");
+      const totalSmall = count * kgPerQuintal;
+      const unitPrice = (count * price) / totalSmall;
+      saveItem(name, "ኪሎ", "ኩንታል", kgPerQuintal, totalSmall, unitPrice);
+
+    } else if (type === "carton") {
+      const count = parseFloat(document.getElementById("stkCartonCount").value) || 0;
+      const price = parseFloat(document.getElementById("stkCartonPrice").value) || 0;
+      if (count <= 0 || price <= 0) return alert("እባክዎን ትክክለኛ የካርቶን ብዛት እና ዋጋ ያስገቡ!");
+      saveItem(name, "ካርቶን", null, 1, count, price);
+
+    } else if (type === "dozen") {
+      const count = parseFloat(document.getElementById("stkDozenCount").value) || 0;
+      const price = parseFloat(document.getElementById("stkDozenPrice").value) || 0;
+      if (count <= 0 || price <= 0) return alert("እባክዎን ትክክለኛ የደርዘን ብዛት እና ዋጋ ያስገቡ!");
+      const totalSmall = count * 12;
+      const unitPrice = (count * price) / totalSmall;
+      saveItem(name, "ፍሬ", "ደርዘን", 12, totalSmall, unitPrice);
+
+    } else if (type === "crate") {
+      const pieces = parseFloat(document.getElementById("stkCratePieces").value) || 0;
+      const count = parseFloat(document.getElementById("stkCrateCount").value) || 0;
+      const price = parseFloat(document.getElementById("stkCratePrice").value) || 0;
+      if (pieces <= 0) return alert("ካሳው ስንት ፍሬ እንደሚይዝ ያስገቡ!");
+      if (count <= 0 || price <= 0) return alert("እባክዎን ትክክለኛ የካሳ ብዛት እና ዋጋ ያስገቡ!");
+      const totalSmall = count * pieces;
+      const unitPrice = (count * price) / totalSmall;
+      saveItem(name, "ፍሬ", "ካሳ", pieces, totalSmall, unitPrice);
+
+    } else {
+      const unit = (document.getElementById("stkPieceUnit").value || "").trim() || "ፍሬ";
+      const qty = parseFloat(document.getElementById("stkPieceQty").value) || 0;
+      const buy = parseFloat(document.getElementById("stkPiecePrice").value) || 0;
+      if (qty <= 0 || buy <= 0) return alert("እባክዎን ትክክለኛ ብዛት እና ዋጋ ያስገቡ!");
+      saveItem(name, unit, null, 1, qty, buy);
+    }
+  }
+
+  function restock(id) {
+    const item = DB.stock.find((i) => i.id === id);
+    if (!item) return;
+    const bulkLabel = item.bulkUnit || item.unit || "ፍሬ";
+    const conv = item.bulkConversion || 1;
+
+    const count = parseFloat(prompt(`ለ "${item.name}" ስንት ${bulkLabel} ጨመሩ?`));
+    if (!count || isNaN(count) || count <= 0) return;
+    const price = parseFloat(prompt(`የአንዱ ${bulkLabel} ዋጋ (ETB) ስንት ነው?`));
+    if (isNaN(price) || price <= 0) return alert("እባክዎን ትክክለኛ ዋጋ ያስገቡ!");
+
+    const totalSmall = count * conv;
+    const unitPrice = (count * price) / totalSmall;
+
+    if (!item.batches) item.batches = [];
+    item.batches.push({ qty: totalSmall, buyPrice: unitPrice });
+    item.qty += totalSmall;
+    item.buyPrice = unitPrice;
+    SBM.database.save("stock");
+    showToast(`አዲስ ጭነት ተጨምሯል! (${Number(unitPrice).toFixed(2)} ETB/${escapeHTML(item.unit)})`);
+    SBM.app.openPage("stock");
+  }
+
+  function edit(id) {
+    const item = DB.stock.find((i) => i.id === id);
+    if (!item) return;
+    const nn = prompt("አዲስ የዕቃ ስም:", item.name);
+    if (nn) {
+      item.name = nn.trim();
+      SBM.database.save("stock");
+      showToast("መረጃው ተስተካክሏል!");
+      SBM.app.openPage("stock");
+    }
+  }
+
+  function remove(id) {
+    if (confirm("እርግጠኛ ነዎት ይህ እቃ ይሰረዝ?")) {
+      DB.stock = DB.stock.filter((i) => i.id !== id);
+      SBM.database.save("stock");
+      showToast("እቃው ተሰርዟል!");
+      SBM.app.openPage("stock");
+    }
+  }
+
+  global.SBM = global.SBM || {};
+  global.SBM.stock = { renderUI, togglePurchaseType, generateRows, filter, add, restock, edit, remove, formatQty };
+})(window);
+
+
+// ==== sales.js ====
+/**
+ * sales.js — POS (መሸጫ) + FIFO Session Snapshot
+ *
+ * posSessionBatches ከ DB.stock[].batches ተነጥሎ የሚቀመጥ "የክፍለ-ጊዜ ቅጂ" (snapshot)
+ * ነው። ይህ የሆነው ካርቱ ውስጥ ያሉ ዕቃዎች ትርፍ ሲሰላ፣ ገና ካልተሸጠ/ካልተረጋገጠ ስቶክ ላይ
+ * ተመስርቶ እንዳይዛባ ለመከላከል ነው (ከዚህ በፊት የነበረ የትርፍ ስሌት ጉድለት መፍትሔ)።
+ *
+ * 🔧 FIX (ኪሎ/ፍሬ ምርጫ አለመስራት)፦
+ * ከዚህ በፊት updateUnitChoices() በእያንዳንዱ ጥሪ (ጅምላ/ትንሽ አሃድ dropdown ራሱ
+ * onchange ሲደረግም ጨምሮ) የ #posUnitChoice ውስጡን (innerHTML) ደግሞ ይገነባው
+ * ነበር። ይሄ ደግሞ ተጠቃሚው የመረጠውን "ትንሽ አሃድ" (ኪሎ/ፍሬ) ወዲያውኑ ወደ "ጅምላ"
+ * (ኩንታል/ካርቶን/ደርዘን) ይመልሰው ነበር — ስለዚህ ኪሎ/ፍሬ የመረጠ ሁሉ በተግባር ጅምላውኑ
+ * ብቻ ይሸጥ ነበር። አሁን dropdown ውስጡ የሚገነባው ዕቃው ራሱ ሲቀየር ብቻ ነው
+ * (data-item-id ተጠቅመን እንከታተላለን) — የተጠቃሚው ምርጫ (ኪሎ/ፍሬ) ስለዚህ ይቆያል።
+ */
+(function (global) {
+  "use strict";
+  const { DB } = SBM;
+  const { escapeHTML, showToast, getEthDateStr, getCurrentEthYMD, renderEthiopicDatePickerHTML, getSelectedEthDateValue } = SBM.utils;
+
+  let posCart = [];
+  let posSessionBatches = {};
+
+  function resetSession() {
+    posCart = [];
+    posSessionBatches = {};
+  }
+
+  function getSessionBatches(item) {
+    if (!posSessionBatches[item.id]) {
+      posSessionBatches[item.id] = (item.batches && item.batches.length)
+        ? JSON.parse(JSON.stringify(item.batches))
+        : [{ qty: item.qty, buyPrice: item.buyPrice || 0 }];
+    }
+    return posSessionBatches[item.id];
+  }
+
+  function renderUI() {
+    const list = DB.stock || [];
+    // formatQty() (from stock.js) shows both units at once when the item has a
+    // bulk grouping — e.g. "995 ኪሎ (9 ኩንታል ከ95 ኪሎ ቀሪ)" — so the seller can see
+    // the stock the same way whether they think in small units or bulk units.
+    const opts = list.length === 0
+      ? '<option value="">ምንም እቃ በስቶክ ውስጥ የለም</option>'
+      : list.map((i) => {
+          const bulkLabel = (i.bulkUnit && (i.bulkConversion || 1) > 1)
+            ? ` (${SBM.stock.formatQty(i)})`
+            : "";
+          return `<option value="${i.id}">${escapeHTML(i.name)} (ቀሪ: ${i.qty} ${escapeHTML(i.unit || "ፍሬ")}${bulkLabel})</option>`;
+        }).join("");
+    return `
+      <div style="border:1px solid var(--border);padding:10px;border-radius:10px;margin-bottom:12px;">
+        <div class="form-group"><label>ዕቃ መምረጫ</label><select id="posItemSelect" onchange="SBM.sales.onItemChange()">${opts}</select></div>
+        <div class="form-group hidden" id="posUnitChoiceGroup"><label>በምን መልኩ ይሸጣል?</label><select id="posUnitChoice" onchange="SBM.sales.onUnitChoiceChange()"></select></div>
+        <div style="display:flex;gap:10px;">
+          <div class="form-group" style="flex:1"><label id="posQtyLabel">ብዛት</label><input type="number" id="posQty" value="1" step="0.01"></div>
+          <div class="form-group" style="flex:1"><label id="posPriceLabel">የአንዱ መሸጫ ዋጋ (ETB)</label><input type="number" id="posSellPrice" placeholder="ዋጋ ያስገቡ"></div>
+        </div>
+        <button class="btn-success" style="width:100%;padding:10px;font-weight:bold;" onclick="SBM.sales.addToCart()">+ እቃውን ወደ ዝርዝር ጨምር</button>
+      </div>
+      <h4>🛒 የተመረጡ እቃዎች ዝርዝር</h4>
+      <div style="max-height:150px;overflow-y:auto;margin:8px 0;">
+        <table><thead><tr><th>እቃ</th><th>ብዛት</th><th>ዋጋ</th><th>ድምር</th><th></th></tr></thead>
+        <tbody id="cartTableBody"><tr><td colspan="5" style="text-align:center;">ምንም እቃ አልተመረጠም</td></tr></tbody></table>
+      </div>
+      <div style="background:rgba(10,94,176,.05);padding:10px;border-radius:8px;margin:10px 0;text-align:right;">
+        <div style="font-size:13px;color:var(--secondary);">ንኡስ ድምር: <span id="cartSubtotal">0.00</span> ETB</div>
+        <div id="cartVatRow" style="font-size:13px;color:var(--secondary);${DB.vatEnabled ? "" : "display:none;"}">ቫት 15%: <span id="cartVatAmount">0.00</span> ETB</div>
+        <div style="font-weight:bold;font-size:16px;margin-top:4px;">${DB.vatEnabled ? "ጠቅላላ ክፍያ ከቫት ጋር" : "ጠቅላላ ክፍያ"}: <span id="cartGrandTotal" style="color:#0A5EB0;">0.00 ETB</span></div>
+      </div>
+      <div class="form-group"><label>የክፍያ ሁኔታ</label>
+        <select id="posPayMode" onchange="SBM.sales.toggleCreditFields(this.value)">
+          <option value="cash">ሙሉ በሙሉ በካሽ</option>
+          <option value="credit">ሙሉ በሙሉ በዱቤ</option>
+          <option value="partial">ግማሽ በካሽ / ግማሽ በዱቤ</option>
+        </select>
+      </div>
+      <div id="posCreditGroup" class="hidden">
+        <div class="form-group"><label>የደንበኛው ስም</label><input type="text" id="posCustomerName" placeholder="የደንበኛ ስም ያስገቡ"></div>
+        <div class="form-group"><label>የሚከፈልበት ቀን (የኢትዮጵያ ካላንደር)</label>${renderEthiopicDatePickerHTML("posDue")}</div>
+        <div class="form-group hidden" id="posDownPayContainer"><label>አሁን በካሽ የከፈለው መጠን (ETB)</label><input type="number" id="posDownPayment" value="0"></div>
+      </div>
+      <button class="btn-primary" style="padding:12px;font-weight:bold;" onclick="SBM.sales.processSale()">✔ ሽያጭ ፈጽም${DB.vatEnabled ? " (ከቫት ጋር)" : ""}</button>`;
+  }
+
+  /**
+   * ዕቃው (posItemSelect) ሲቀየር ብቻ ይጠራል። እዚህ ብቻ ነው #posUnitChoice ውስጡ
+   * እንደገና የሚገነባው (ወደ "ጅምላ" default ተመልሶ) — ምክንያቱም አዲስ ዕቃ ሲመረጥ
+   * ከዚህ ቀደም የነበረው ምርጫ (ኪሎ/ፍሬ) ለአዲሱ ዕቃ ትርጉም ስለሌለው።
+   */
+  function onItemChange() {
+    const unitSel = document.getElementById("posUnitChoice");
+    if (unitSel) delete unitSel.dataset.itemId; // ግድ አድርገው dropdown እንደገና እንዲገነባ
+    updateUnitChoices();
+  }
+
+  /**
+   * "ጅምላ/ትንሽ አሃድ" dropdown ራሱ ሲቀየር ይጠራል። እዚህ ውስጡ (innerHTML) በጭራሽ
+   * አይነካካም — ስለዚህ ተጠቃሚው የመረጠው (ኪሎ/ፍሬ) አይጠፋም። ሌብሎችን ብቻ ነው የምናድሰው።
+   */
+  function onUnitChoiceChange() {
+    updateLabelsOnly();
+  }
+
+  function updateLabelsOnly() {
+    const sel = document.getElementById("posItemSelect");
+    const unitSel = document.getElementById("posUnitChoice");
+    const qtyLabel = document.getElementById("posQtyLabel");
+    const priceLabel = document.getElementById("posPriceLabel");
+    if (!sel || !sel.value || !unitSel) return;
+    const item = DB.stock.find((i) => i.id === parseFloat(sel.value));
+    if (!item) return;
+    const chosen = unitSel.value === "small" ? "small" : "bulk";
+    const label = chosen === "bulk" ? (item.bulkUnit || item.unit) : item.unit;
+    qtyLabel.innerText = `ብዛት (በ${label})`;
+    priceLabel.innerText = `የአንዱ ${label} መሸጫ ዋጋ (ETB)`;
+  }
+
+  function updateUnitChoices() {
+    const sel = document.getElementById("posItemSelect");
+    const group = document.getElementById("posUnitChoiceGroup");
+    const unitSel = document.getElementById("posUnitChoice");
+    const qtyLabel = document.getElementById("posQtyLabel");
+    const priceLabel = document.getElementById("posPriceLabel");
+    if (!sel || !sel.value) { group.classList.add("hidden"); return; }
+    const item = DB.stock.find((i) => i.id === parseFloat(sel.value));
+    if (!item) { group.classList.add("hidden"); return; }
+
+    if (item.bulkUnit && (item.bulkConversion || 1) > 1) {
+      group.classList.remove("hidden");
+      // dropdown ውስጡን የምንገነባው ዕቃው ከቀደመው ጊዜ ተቀይሮ ከሆነ ብቻ ነው (data-item-id
+      // via onItemChange) — ስለዚህ በራሱ dropdown ምርጫ (onUnitChoiceChange)
+      // ምክንያት እንደገና አይገነባም/አይጠፋም።
+      if (unitSel.dataset.itemId !== String(item.id)) {
+        unitSel.innerHTML = `<option value="bulk">${escapeHTML(item.bulkUnit)}</option><option value="small">${escapeHTML(item.unit)}</option>`;
+        unitSel.value = "bulk";
+        unitSel.dataset.itemId = String(item.id);
+      }
+      const chosen = unitSel.value === "small" ? "small" : "bulk";
+      const label = chosen === "bulk" ? item.bulkUnit : item.unit;
+      qtyLabel.innerText = `ብዛት (በ${label})`;
+      priceLabel.innerText = `የአንዱ ${label} መሸጫ ዋጋ (ETB)`;
+    } else {
+      group.classList.add("hidden");
+      if (unitSel) delete unitSel.dataset.itemId;
+      qtyLabel.innerText = `ብዛት (በ${item.unit || "ፍሬ"})`;
+      priceLabel.innerText = `የአንዱ ${item.unit || "ፍሬ"} መሸጫ ዋጋ (ETB)`;
+    }
+  }
+
+  function addToCart() {
+    const sel = document.getElementById("posItemSelect");
+    if (!sel || !sel.value) return alert("እባክዎን መጀመሪያ እቃ ይምረጡ!");
+    const id = parseFloat(sel.value);
+    const enteredQty = parseFloat(document.getElementById("posQty").value) || 0;
+    const enteredSell = parseFloat(document.getElementById("posSellPrice").value) || 0;
+    const item = DB.stock.find((i) => i.id === id);
+    if (!item || enteredQty <= 0) return alert("ትክክለኛ ብዛት ያስገቡ!");
+    if (enteredSell <= 0) return alert("እባክዎን የመሸጫ ዋጋ ያስገቡ!");
+
+    const unitChoiceEl = document.getElementById("posUnitChoice");
+    const useBulk = item.bulkUnit && !document.getElementById("posUnitChoiceGroup").classList.contains("hidden") && unitChoiceEl && unitChoiceEl.value === "bulk";
+    const conv = useBulk ? (item.bulkConversion || 1) : 1;
+    const displayUnit = useBulk ? item.bulkUnit : (item.unit || "ፍሬ");
+
+    const qty = enteredQty * conv;           // small-unit quantity, used for stock/FIFO
+    const sell = enteredSell / conv;         // per-small-unit sell price, used for FIFO profit math
+
+    const curQty = posCart.filter((c) => c.id === id).reduce((s, c) => s + c.qty, 0);
+    if (item.qty < curQty + qty) return alert("በስቶክ ውስጥ በቂ እቃ የለም! (ቀሪ: " + (item.qty - curQty) + " " + escapeHTML(item.unit || "ፍሬ") + ")");
+
+    const sb = getSessionBatches(item);
+    let need = qty, profit = 0;
+    for (const b of sb) {
+      if (b.qty > 0 && need > 0) {
+        const take = Math.min(need, b.qty);
+        profit += (sell - b.buyPrice) * take;
+        b.qty -= take;
+        need -= take;
+      }
+    }
+    posCart.push({
+      cartLineId: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      id: item.id, name: item.name, qty, sellPrice: sell, subtotal: enteredQty * enteredSell, profit,
+      displayQty: enteredQty, displayUnit, displaySellPrice: enteredSell, convFactor: conv,
+    });
+    document.getElementById("posSellPrice").value = "";
+    document.getElementById("posQty").value = "1";
+    updateCartTable();
+  }
+
+  function recomputeProfitsForItem(itemId) {
+    const item = DB.stock.find((i) => i.id === itemId);
+    if (!item) return;
+    delete posSessionBatches[itemId];
+    const sb = getSessionBatches(item);
+    posCart.filter((c) => c.id === itemId).forEach((line) => {
+      let need = line.qty, pr = 0;
+      for (const b of sb) {
+        if (b.qty > 0 && need > 0) {
+          const take = Math.min(need, b.qty);
+          pr += (line.sellPrice - b.buyPrice) * take;
+          b.qty -= take;
+          need -= take;
+        }
+      }
+      line.profit = pr;
+    });
+  }
+
+  function editCartLine(lid) {
+    const line = posCart.find((c) => c.cartLineId === lid);
+    if (!line) return;
+    const item = DB.stock.find((i) => i.id === line.id);
+    const unitLabel = line.displayUnit || "";
+
+    const newQtyStr = prompt(`"${line.name}" ብዛት በ${unitLabel} (አሁን ${line.displayQty}) ብትቀይሩ አዲስ ብዛት ያስገቡ፡`, line.displayQty);
+    if (newQtyStr === null) return;
+    const newDisplayQty = parseFloat(newQtyStr);
+    if (isNaN(newDisplayQty) || newDisplayQty <= 0) return alert("ትክክለኛ ብዛት ያስገቡ!");
+
+    const newPriceStr = prompt(`"${line.name}" የ${unitLabel} መሸጫ ዋጋ (አሁን ${line.displaySellPrice}) ብትቀይሩ አዲስ ዋጋ ያስገቡ፡`, line.displaySellPrice);
+    if (newPriceStr === null) return;
+    const newDisplayPrice = parseFloat(newPriceStr);
+    if (isNaN(newDisplayPrice) || newDisplayPrice <= 0) return alert("ትክክለኛ ዋጋ ያስገቡ!");
+
+    const conv = line.convFactor || 1;
+    const newQty = newDisplayQty * conv;
+    const newPrice = newDisplayPrice / conv;
+
+    if (item) {
+      const otherQty = posCart.filter((c) => c.id === line.id && c.cartLineId !== lid).reduce((s, c) => s + c.qty, 0);
+      if (item.qty < otherQty + newQty) {
+        return alert("በስቶክ ውስጥ በቂ እቃ የለም! (ቀሪ: " + (item.qty - otherQty) + " " + escapeHTML(item.unit || "ፍሬ") + ")");
+      }
+    }
+
+    line.qty = newQty;
+    line.sellPrice = newPrice;
+    line.displayQty = newDisplayQty;
+    line.displaySellPrice = newDisplayPrice;
+    line.subtotal = newDisplayQty * newDisplayPrice;
+    recomputeProfitsForItem(line.id);
+    updateCartTable();
+    showToast("ተስተካክሏል!");
+  }
+
+  function removeFromCart(lid) {
+    const removed = posCart.find((c) => c.cartLineId === lid);
+    posCart = posCart.filter((c) => c.cartLineId !== lid);
+    if (removed) {
+      const item = DB.stock.find((i) => i.id === removed.id);
+      if (item) {
+        // Recompute profit for remaining lines of this item from a fresh
+        // snapshot, so removing a line never leaves stale batch state behind.
+        delete posSessionBatches[removed.id];
+        const sb = getSessionBatches(item);
+        posCart.filter((c) => c.id === removed.id).forEach((line) => {
+          let need = line.qty, pr = 0;
+          for (const b of sb) {
+            if (b.qty > 0 && need > 0) {
+              const take = Math.min(need, b.qty);
+              pr += (line.sellPrice - b.buyPrice) * take;
+              b.qty -= take;
+              need -= take;
+            }
+          }
+          line.profit = pr;
+        });
+      }
+    }
+    updateCartTable();
+  }
+
+  function updateCartTable() {
+    const tb = document.getElementById("cartTableBody"), sE = document.getElementById("cartSubtotal"),
+      vE = document.getElementById("cartVatAmount"), gE = document.getElementById("cartGrandTotal");
+    if (!tb || !sE || !vE || !gE) return;
+    if (posCart.length === 0) {
+      tb.innerHTML = '<tr><td colspan="5" style="text-align:center;">ምንም እቃ አልተመረጠም</td></tr>';
+      sE.innerText = "0.00"; vE.innerText = "0.00"; gE.innerText = "0.00 ETB";
+      return;
+    }
+    let sub = 0;
+    tb.innerHTML = posCart.map((c) => {
+      sub += c.subtotal;
+      return `<tr><td><b>${escapeHTML(c.name)}</b></td><td>${c.displayQty} ${escapeHTML(c.displayUnit || "")}</td><td>${Number(c.displaySellPrice).toFixed(2)}</td>
+        <td>${Number(c.subtotal).toFixed(2)}</td>
+        <td class="action-btns">
+          <button class="btn-secondary" onclick="SBM.sales.editCartLine('${c.cartLineId}')">✏️</button>
+          <button class="btn-danger" onclick="SBM.sales.removeFromCart('${c.cartLineId}')">❌</button>
+        </td></tr>`;
+    }).join("");
+    const vat = DB.vatEnabled ? sub * 0.15 : 0;
+    sE.innerText = sub.toFixed(2); vE.innerText = vat.toFixed(2); gE.innerText = (sub + vat).toFixed(2) + " ETB";
+  }
+
+  function toggleCreditFields(mode) {
+    const g = document.getElementById("posCreditGroup"), d = document.getElementById("posDownPayContainer");
+    if (!g || !d) return;
+    if (mode === "cash") { g.classList.add("hidden"); }
+    else if (mode === "credit") { g.classList.remove("hidden"); d.classList.add("hidden"); }
+    else { g.classList.remove("hidden"); d.classList.remove("hidden"); }
+  }
+
+  function processSale() {
+    if (posCart.length === 0) return alert("እባክዎን መጀመሪያ እቃዎችን ወደ ዝርዝር ይጨምሩ!");
+    const payMode = document.getElementById("posPayMode").value;
+    const sub = posCart.reduce((s, c) => s + c.subtotal, 0);
+    const vat = DB.vatEnabled ? sub * 0.15 : 0;
+    const grand = sub + vat;
+    const profit = posCart.reduce((s, c) => s + c.profit, 0);
+    const cn = document.getElementById("posCustomerName") ? document.getElementById("posCustomerName").value.trim() : "";
+    const dp = document.getElementById("posDownPayment") ? (parseFloat(document.getElementById("posDownPayment").value) || 0) : 0;
+
+    if (payMode !== "cash" && !cn) return alert("እባክዎን የደንበኛውን ስም ያስገቡ!");
+    if (payMode === "partial") {
+      if (dp < 0) return alert("የካሽ መጠን ከ0 በታች መሆን አይችልም!");
+      if (dp > grand) return alert("የካሽ መጠን ከጠቅላላ ክፍያ በላይ መሆን አይችልም!");
+    }
+    let dueDate = "";
+    if (payMode !== "cash") dueDate = getSelectedEthDateValue("posDue") || getCurrentEthYMD();
+
+    const cash = payMode === "cash" ? grand : (payMode === "partial" ? dp : 0);
+    const credit = payMode === "credit" ? grand : (payMode === "partial" ? (grand - dp) : 0);
+
+    // Commit stock reductions against REAL stock (not the session snapshot).
+    posCart.forEach((ci) => {
+      const si = DB.stock.find((s) => s.id === ci.id);
+      if (!si) return;
+      let q = ci.qty;
+      si.qty = Math.max(0, (si.qty || 0) - q);
+      if (si.batches) {
+        for (const b of si.batches) {
+          if (b.qty > 0 && q > 0) {
+            const take = Math.min(q, b.qty);
+            b.qty -= take; q -= take;
+            if (q <= 0) break;
+          }
+        }
+        si.batches = si.batches.filter((b) => b.qty > 0);
+      }
+    });
+
+    const summary = posCart.map((c) => `${c.name} (x${c.displayQty}${c.displayUnit || ""} @ ${c.displaySellPrice}ብር)`).join(", ");
+    if (payMode !== "cash") {
+      SBM.credit.recordTransaction(cn, payMode === "credit" ? "እቃ ወሰደ (በዱቤ)" : "እቃ ወሰደ (በከፊል ከፈለ)", summary, grand, cash, dueDate);
+    }
+    DB.sales.push({
+      id: Date.now(), items: [...posCart], summaryName: summary, subtotal: sub, vatAmount: vat,
+      vatApplied: !!DB.vatEnabled,
+      total: grand, cashAmount: cash, creditAmount: credit, profit, date: getEthDateStr(),
+      payMode, customer: cn || "የካሽ ደንበኛ",
+    });
+    SBM.database.save("stock");
+    SBM.database.save("sales");
+    resetSession();
+    showToast("ሽያጭ በስኬት ተፈጽሟል!");
+    SBM.app.closeModal();
+  }
+
+  global.SBM = global.SBM || {};
+  global.SBM.sales = {
+    renderUI, onItemChange, onUnitChoiceChange, addToCart, updateUnitChoices, removeFromCart, editCartLine, updateCartTable, toggleCreditFields, processSale,
+    resetSession, getCart: () => posCart,
+  };
+})(window);
+
+
+// ==== credit.js ====
+/**
+ * credit.js — የብድር/ዱቤ መዝገብ
+ */
+(function (global) {
+  "use strict";
+  const { DB } = SBM;
+  const { escapeHTML, jsAttr, showToast, isDateOverdue, formatEthDateForDisplay, getEthDateStr, renderEthiopicDatePickerHTML, getSelectedEthDateValue } = SBM.utils;
+
+  function renderUI() {
+    const list = DB.credits || [];
+    return `
+      <input type="text" class="search-bar" placeholder="🔍 የደንበኛ ስም መፈለጊያ..." onkeyup="SBM.credit.filter(this.value)">
+      <div style="border:1px solid var(--border);padding:10px;border-radius:10px;margin-bottom:12px;">
+        <div class="form-group"><label>የደንበኛው ስም</label><input type="text" id="cstName"></div>
+        <div class="form-group"><label>የብድር መጠን (ከቫት ጋር)</label><input type="number" id="cstAmount"></div>
+        <div class="form-group"><label>የሚከፈልበት ቀን (የኢትዮጵያ ካላንደር)</label>${renderEthiopicDatePickerHTML("cstDue")}</div>
+        <div class="form-group"><label>የዕቃ ስም/ማስታወሻ</label><input type="text" id="cstNote" placeholder="ምሳሌ፡ 2 ኩንታል ብረት"></div>
+        <button class="btn-primary" onclick="SBM.credit.addDirect()">+ አዲስ የደንበኛ ብድር መዝግብ</button>
+      </div>
+      <h4>📋 የደንበኞች የብድር መዝገብ (${list.length})</h4>
+      <div style="max-height:250px;overflow-y:auto;margin-top:8px;">
+        <table><thead><tr><th>ደንበኛ</th><th>ቀሪ ዕዳ</th><th>የሚከፈልበት ቀን</th><th>ድርጊት</th></tr></thead>
+        <tbody id="creditTableBody">${generateRows(list)}</tbody></table>
+      </div>`;
+  }
+
+  function generateRows(list) {
+    if (!list || list.length === 0) return '<tr><td colspan="4" style="text-align:center;">ምንም የተመዘገበ የብድር ደንበኛ የለም</td></tr>';
+    return list.map((c) => {
+      const dd = c.dueDate ? formatEthDateForDisplay(c.dueDate) : "አልተጠቀሰም";
+      const od = isDateOverdue(c.dueDate) ? '<br><span class="overdue-badge">🔴 ቀን አልፏል!</span>' : "";
+      return `<tr><td><b>${escapeHTML(c.customer)}</b></td>
+        <td><span style="color:#dc3545;font-weight:bold;">${Number(c.amount || 0).toFixed(2)} ETB</span></td>
+        <td><small>${dd}</small>${od}</td>
+        <td class="action-btns">
+          <button class="btn-primary" style="padding:4px 8px;font-size:12px;" onclick="SBM.credit.viewHistory(${jsAttr(c.customer)})">📜 ታሪክ</button>
+          <button class="btn-success" onclick="SBM.credit.payDebt(${jsAttr(c.customer)})">ከፍል</button>
+          <button class="btn-danger" onclick="SBM.credit.remove(${c.id})">🗑️</button>
+        </td></tr>`;
+    }).join("");
+  }
+
+  function filter(q) {
+    const f = (DB.credits || []).filter((c) => c.customer.toLowerCase().includes(q.toLowerCase()));
+    const b = document.getElementById("creditTableBody");
+    if (b) b.innerHTML = generateRows(f);
+  }
+
+  function addDirect() {
+    const c = (document.getElementById("cstName").value || "").trim();
+    const a = parseFloat(document.getElementById("cstAmount").value) || 0;
+    const d = getSelectedEthDateValue("cstDue");
+    const n = (document.getElementById("cstNote").value || "").trim() || "የቀደመ ብድር";
+    if (!c || a <= 0) return alert("እባክዎን ትክክለኛ ስም እና የገንዘብ መጠን ያስገቡ!");
+    recordTransaction(c, "እቃ ወሰደ", n, a, 0, d);
+    showToast("የብድር መዝገብ ተፈጥሯል!");
+    SBM.app.openPage("credit");
+  }
+
+  function recordTransaction(customer, type, items, amount, paid, dueDate) {
+    customer = String(customer || "").trim();
+    if (!customer) return;
+    dueDate = dueDate || "";
+    if (!DB.creditHistory[customer]) DB.creditHistory[customer] = [];
+    const h = DB.creditHistory[customer];
+    const last = h.length > 0 ? Number(h[h.length - 1].remainingBalance || 0) : 0;
+    const nb = last + Number(amount || 0) - Number(paid || 0);
+    h.push({ date: getEthDateStr(), type, items, prevBalance: last, amount: Number(amount || 0), paid: Number(paid || 0), dueDate, remainingBalance: nb });
+    let ex = DB.credits.find((c) => c.customer.toLowerCase() === customer.toLowerCase());
+    if (ex) { ex.amount = nb; if (dueDate) ex.dueDate = dueDate; }
+    else { DB.credits.push({ id: Date.now(), customer, amount: nb, dueDate }); }
+    SBM.database.save("credits");
+    SBM.database.save("creditHistory");
+  }
+
+  function payDebt(name) {
+    const c = (DB.credits || []).find((i) => i.customer.toLowerCase() === String(name).toLowerCase());
+    if (!c) return;
+    const pa = prompt(`ለ "${c.customer}" ከነበረበት ${Number(c.amount || 0).toFixed(2)} ETB ዕዳ ስንት ከፈለ?`);
+    const paid = parseFloat(pa);
+    if (pa && !isNaN(paid) && paid > 0) {
+      if (paid > c.amount) return alert("ከዕዳ በላይ ክፍያ አይፈቀድም!");
+      recordTransaction(c.customer, "ክፍያ ፈጸመ", "የከፈለው ገንዘብ", 0, paid);
+      if (c.amount <= 0) {
+        alert("ዕዳው ሙሉ በሙሉ ተከፍሎ ተጠናቀቀ!");
+        DB.credits = DB.credits.filter((i) => i.customer.toLowerCase() !== String(name).toLowerCase());
+        SBM.database.save("credits");
+      }
+      showToast("ክፍያ ተመዝግቧል!");
+      SBM.app.openPage("credit");
+    }
+  }
+
+  function viewHistory(name) {
+    const h = DB.creditHistory[name] || [];
+    const cur = h.length > 0 ? h[h.length - 1].remainingBalance : 0;
+    let rows = h.map((x, idx) => `<tr><td><b>#${idx + 1}</b><br><small>${escapeHTML(x.date)}</small></td>
+      <td><b>${escapeHTML(x.type)}</b></td><td><small>${escapeHTML(x.items)}</small></td>
+      <td>${Number(x.prevBalance || 0).toFixed(2)}</td>
+      <td><span style="color:${x.amount > 0 ? "red" : "inherit"};">${Number(x.amount || 0).toFixed(2)}</span></td>
+      <td><span style="color:green;font-weight:bold;">${Number(x.paid || 0).toFixed(2)}</span></td>
+      <td><b style="color:#0A5EB0;">${Number(x.remainingBalance || 0).toFixed(2)}</b></td></tr>`).join("");
+    if (h.length === 0) rows = '<tr><td colspan="7" style="text-align:center;">ምንም የታሪክ መዝገብ የለም</td></tr>';
+    document.getElementById("modalTitle").innerText = "📜 የደንበኛ የሂሳብ ታሪክ";
+    document.getElementById("modalBody").innerHTML = `
+      <div class="summary-box"><h4>👤 ደንበኛ፡ ${escapeHTML(name)}</h4>
+      <p style="font-size:15px;margin-top:4px;">የአሁኑ ቀሪ ዕዳ <b style="color:red;font-size:18px;">${Number(cur).toFixed(2)} ETB</b></p></div>
+      <div style="max-height:280px;overflow-x:auto;overflow-y:auto;">
+        <table style="min-width:550px;"><thead><tr><th>ተራ/ቀን</th><th>አይነት</th><th>ዝርዝር</th><th>የነበረበት</th><th>አዲስ የወሰደው</th><th>የከፈለው</th><th>ቀሪ ዕዳ</th></tr></thead>
+        <tbody>${rows}</tbody></table></div>
+      <div style="display:flex;gap:10px;margin-top:15px;">
+        <button class="btn-secondary" style="flex:1;" onclick="SBM.app.openPage('credit')">⬅ ተመለስ</button>
+        <button class="btn-primary" style="flex:1;" onclick="SBM.app.printModalContent()">🖨️ ታሪክ አትም (Print)</button>
+      </div>`;
+  }
+
+  function remove(id) {
+    const cr = (DB.credits || []).find((i) => i.id === id);
+    if (!cr) return;
+    if (confirm("እርግጠኛ ነዎት ይህ የብድር መዝገብ ይሰረዝ?")) {
+      DB.credits = DB.credits.filter((i) => i.id !== id);
+      delete DB.creditHistory[cr.customer];
+      SBM.database.save("credits");
+      SBM.database.save("creditHistory");
+      showToast("የብድር መዝገብ ተሰርዟል!");
+      SBM.app.openPage("credit");
+    }
+  }
+
+  global.SBM = global.SBM || {};
+  global.SBM.credit = { renderUI, filter, addDirect, recordTransaction, payDebt, viewHistory, remove };
+})(window);
+
+
+// ==== report.js ====
+/**
+ * report.js — ወጪዎች፣ የዕለት ሪፖርት፣ የቫት ሪፖርት፣ ጠቅላላ ትርፍ/ኪሳራ ሪፖርት
+ */
+(function (global) {
+  "use strict";
+  const { DB } = SBM;
+  const { escapeHTML, showToast, getEthDateStr, getEthDateObj, ethMonthsAmharic } = SBM.utils;
+
+  // ---------- Expenses ----------
+  function renderExpenseUI() {
+    const ex = DB.expenses || [];
+    const tot = ex.reduce((s, e) => s + e.amount, 0);
+    return `
+      <div style="border:1px solid var(--border);padding:12px;border-radius:10px;margin-bottom:15px;">
+        <h4 style="margin-bottom:8px;">➕ አዲስ ወጪ መመዝገያ</h4>
+        <div class="form-group"><label>የወጪው ምክንያት/ዝርዝር</label><input type="text" id="expDesc" placeholder="ምሳሌ፡ ለጫኚ፣ ለትራንስፖርት..."></div>
+        <div class="form-group"><label>የገንዘብ መጠን (ETB)</label><input type="number" id="expAmt" placeholder="መጠን ያስገቡ"></div>
+        <button class="btn-primary" onclick="SBM.report.addExpense()">+ ወጪ መዝግብ</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h4>📜 የወጪዎች ታሪክ (${ex.length})</h4><b>ጠቅላላ ወጪ <span style="color:orange;">${tot.toFixed(2)} ETB</span></b>
+      </div>
+      <div style="max-height:220px;overflow-y:auto;">
+        <table><thead><tr><th>ቀን</th><th>ምክንያት</th><th>መጠን</th><th>ድርጊት</th></tr></thead>
+        <tbody id="expenseTableBody">${generateExpenseRows(ex)}</tbody></table>
+      </div>`;
+  }
+  function generateExpenseRows(list) {
+    if (!list || list.length === 0) return '<tr><td colspan="4" style="text-align:center;">ምንም የተመዘገበ ወጪ የለም</td></tr>';
+    return list.slice().reverse().map((e) => `<tr><td><small>${escapeHTML(e.date)}</small></td>
+      <td><b>${escapeHTML(e.desc)}</b></td>
+      <td><span style="color:orange;font-weight:bold;">${Number(e.amount || 0).toFixed(2)} ETB</span></td>
+      <td><button class="btn-danger" style="padding:3px 6px;font-size:11px;" onclick="SBM.report.deleteExpense(${e.id})">🗑️</button></td></tr>`).join("");
+  }
+  function addExpense() {
+    const d = (document.getElementById("expDesc").value || "").trim();
+    const a = parseFloat(document.getElementById("expAmt").value) || 0;
+    if (!d || a <= 0) return alert("እባክዎን የወጪ ምክንያትና ትክክለኛ መጠን ያስገቡ!");
+    DB.expenses.push({ id: Date.now(), desc: d, amount: a, date: getEthDateStr() });
+    SBM.database.save("expenses");
+    showToast("ወጪው ተመዝግቧል!");
+    SBM.app.openPage("expenses");
+  }
+  function deleteExpense(id) {
+    if (confirm("እርግጠኛ ነዎት ይህ የወጪ መዝገብ ይሰረዝ?")) {
+      DB.expenses = DB.expenses.filter((e) => e.id !== id);
+      SBM.database.save("expenses");
+      showToast("ወጪው ተሰርዟል!");
+      SBM.app.openPage("expenses");
+    }
+  }
+
+  // ---------- Daily report ----------
+  function renderDailyReportUI() {
+    const today = getEthDateStr();
+    const ts = (DB.sales || []).filter((s) => s.date === today);
+    const te = (DB.expenses || []).filter((e) => e.date === today);
+    let tc = 0, tcr = 0, tp = 0, tv = 0;
+    ts.forEach((s) => {
+      tc += s.cashAmount !== undefined ? s.cashAmount : (s.payMode === "cash" ? s.total : 0);
+      tcr += s.creditAmount !== undefined ? s.creditAmount : (s.payMode === "credit" ? s.total : 0);
+      tp += s.profit || 0;
+      tv += s.vatAmount || (s.total ? Number(s.total) * 0.15 / 1.15 : 0);
+    });
+    const teA = te.reduce((s, e) => s + e.amount, 0);
+    const net = tc - teA;
+    let rows = ts.map((s) => `<tr><td><b>${escapeHTML(s.customer)}</b></td><td><small>${escapeHTML(s.summaryName)}</small></td>
+      <td>${Number(s.total || 0).toFixed(2)} ETB</td>
+      <td>${s.payMode === "cash" ? "💵 ካሽ" : (s.payMode === "credit" ? "💳 ዱቤ" : "🌗 ከፊል")}</td></tr>`).join("");
+    if (ts.length === 0) rows = '<tr><td colspan="4" style="text-align:center;">ለዛሬ እስካሁን ምንም ሽያጭ አልተመዘገበም</td></tr>';
+    return `<div style="background:rgba(0,0,0,.03);padding:12px;border-radius:10px;margin-bottom:12px;">
+      <h4 style="margin-top:0;text-align:center;">📅 ዛሬ (${today})</h4>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>💵 የዛሬ ካሽ ሽያጭ (ከቫት ጋር):</span><b style="color:green;">${tc.toFixed(2)} ETB</b></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>🧾 የተሰበሰበ 15% ቫት:</span><b style="color:#0A5EB0;">${tv.toFixed(2)} ETB</b></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>💳 የዛሬ ዱቤ ሽያጭ:</span><b style="color:red;">${tcr.toFixed(2)} ETB</b></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>💸 የዛሬ ወጪ:</span><b style="color:orange;">${teA.toFixed(2)} ETB</b></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>📈 የዛሬ የተጣራ ትርፍ:</span><b style="color:green;">${(tp - teA).toFixed(2)} ETB</b></div>
+      <hr><div style="display:flex;justify-content:space-between;font-size:16px;"><span>💰 የዛሬ የተጣራ ንብረት (Net Cash):</span><b style="color:#0A5EB0;">${net.toFixed(2)} ETB</b></div>
+      </div>
+      <h4>🛒 የዛሬ የተሸጡ እቃዎች ዝርዝር</h4>
+      <div style="max-height:200px;overflow-y:auto;"><table><thead><tr><th>ደንበኛ</th><th>ዕቃዎች</th><th>ዋጋ</th><th>ሁኔታ</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <button class="btn-secondary" style="margin-top:10px;width:100%;" onclick="SBM.app.printModalContent()">🖨️ የዕለት ሪፖርት አትም</button>`;
+  }
+
+  // ---------- Sales history ----------
+  function renderSalesHistoryUI() {
+    return `<div style="margin-bottom:10px;"><select id="salesFilterSelect" onchange="SBM.report.filterSalesHistory(this.value)" style="width:100%;padding:8px;font-weight:bold;">
+      <option value="all">ሁሉንም ሽያጮች አሳይ</option><option value="cash">💵 በካሽ ብቻ</option><option value="credit">💳 በዱቤ ሽያጭ</option><option value="partial">🌗 ግማሽ ካሽ / ግማሽ ዱቤ</option>
+      </select></div>
+      <div style="max-height:300px;overflow-y:auto;"><table><thead><tr><th>ቀን</th><th>የደንበኛ/ሁኔታ</th><th>የተሸጡ ዕቃዎች</th><th>ጠቅላላ (ከቫት ጋር)</th></tr></thead>
+      <tbody id="salesHistoryTableBody">${generateSalesHistoryRows(DB.sales || [])}</tbody></table></div>`;
+  }
+  function generateSalesHistoryRows(list) {
+    if (!list || list.length === 0) return '<tr><td colspan="4" style="text-align:center;">ምንም የተመዘገበ የሽያጭ ታሪክ የለም</td></tr>';
+    return list.slice().reverse().map((s) => {
+      let tag = s.payMode === "cash" ? '<span style="color:green;font-weight:bold;">[ካሽ]</span>'
+        : s.payMode === "credit" ? '<span style="color:red;font-weight:bold;">[ዱቤ]</span>'
+        : '<span style="color:orange;font-weight:bold;">[ግማሽ ዱቤ]</span>';
+      const tv = s.total !== undefined ? s.total : (s.subtotal ? s.subtotal * 1.15 : 0);
+      return `<tr><td><small>${escapeHTML(s.date)}</small></td><td><b>${escapeHTML(s.customer)}</b><br>${tag}</td>
+        <td><small>${escapeHTML(s.summaryName)}</small></td><td><b>${Number(tv).toFixed(2)} ETB</b></td></tr>`;
+    }).join("");
+  }
+  function filterSalesHistory(mode) {
+    const sales = DB.sales || [];
+    const b = document.getElementById("salesHistoryTableBody");
+    if (!b) return;
+    b.innerHTML = mode === "all" ? generateSalesHistoryRows(sales) : generateSalesHistoryRows(sales.filter((s) => s.payMode === mode));
+  }
+
+  // ---------- VAT report ----------
+  function renderVatReportUI() {
+    const cur = getEthDateObj();
+    let mSel = "", ySel = "";
+    ethMonthsAmharic.forEach((mm, idx) => { mSel += `<option value="${idx + 1}"${(idx + 1) === cur.month ? " selected" : ""}>${mm}</option>`; });
+    for (let y = cur.year - 1; y <= cur.year + 1; y++) { ySel += `<option value="${y}"${y === cur.year ? " selected" : ""}>${y}</option>`; }
+    return `<div class="form-group"><label>የሪፖርት ወር (የኢትዮጵያ ካላንደር)</label>
+      <div class="eth-date-picker"><select id="vatMonth" onchange="SBM.report.updateVatReport()">${mSel}</select><select id="vatYear" onchange="SBM.report.updateVatReport()">${ySel}</select></div></div>
+      <div id="vatReportBox"></div>`;
+  }
+  function updateVatReport() {
+    const mEl = document.getElementById("vatMonth"), yEl = document.getElementById("vatYear"), box = document.getElementById("vatReportBox");
+    if (!mEl || !yEl || !box) return;
+    const m = parseInt(mEl.value), y = parseInt(yEl.value);
+    const mName = ethMonthsAmharic[m - 1];
+    const sales = (DB.sales || []).filter((s) => (s.date || "").includes(mName) && (s.date || "").includes(String(y)));
+    let sub = 0, vat = 0, tot = 0;
+    sales.forEach((s) => { sub += Number(s.subtotal || 0); vat += Number(s.vatAmount || 0); tot += Number(s.total || 0); });
+    const key = y + "-" + m;
+    const inputVat = Number((DB.vatInputs || {})[key] || 0);
+    const net = vat - inputVat;
+    box.innerHTML = `<div style="background:rgba(0,0,0,.03);padding:12px;border-radius:10px;line-height:1.9;">
+      <h4 style="text-align:center;">📑 የቫት ሪፖርት — ${mName} ${y} ዓ.ም</h4>
+      <p>ሽያጭ (ያለ ቫት): <b>${sub.toFixed(2)} ETB</b></p>
+      <p>የተሰበሰበ ቫት 15% (Output VAT): <b style="color:#0A5EB0;">${vat.toFixed(2)} ETB</b></p>
+      <p>ጠቅላላ ሽያጭ (ከቫት ጋር): <b>${tot.toFixed(2)} ETB</b></p>
+      <div class="form-group" style="margin-top:10px;"><label>የግብዓት ቫት (Input VAT) — ከአቅራቢዎች የቫት ደረሰኝ ካለ ብቻ</label>
+        <input type="number" id="vatInputAmt" value="${inputVat ? inputVat : ""}" placeholder="0.00" onchange="SBM.report.saveVatInput()"></div>
+      <hr><p style="font-size:17px;color:${net >= 0 ? "#dc3545" : "#28a745"}"><b>የሚከፈል ቫት (Output − Input): ${net.toFixed(2)} ETB</b></p>
+      <p style="font-size:12px;color:var(--secondary);">ማስታወሻ፡ ይህ ማጠቃለያ ለግብር ባለስልጣን የሚቀርበውን ወርሃዊ የቫት መጠን ማስላት ይረዳል። አሉታዊ ከሆነ — በዚህ ወር ክፍያ የለም፤ ወደ ቀጣይ ወር ይተላለፋል።</p>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:12px;">
+        <button class="btn-secondary" style="flex:1;" onclick="SBM.app.printModalContent()">🖨️ አትም</button>
+        <button class="btn-primary" style="flex:1;" onclick="SBM.app.shareCurrentPage()">📤 ሼር</button>
+      </div>`;
+  }
+  function saveVatInput() {
+    const m = parseInt(document.getElementById("vatMonth").value);
+    const y = parseInt(document.getElementById("vatYear").value);
+    const key = y + "-" + m;
+    const val = parseFloat(document.getElementById("vatInputAmt").value) || 0;
+    if (!DB.vatInputs) DB.vatInputs = {};
+    DB.vatInputs[key] = val;
+    SBM.database.save("vatInputs");
+    updateVatReport();
+    showToast("የግብዓት ቫት ተመዝግቧል!");
+  }
+
+  // ---------- Profit / loss summary ----------
+  function renderReportsUI() {
+    const ts = (DB.sales || []).reduce((s, x) => s + (x.total || 0), 0);
+    const tp = (DB.sales || []).reduce((s, x) => s + (x.profit || 0), 0);
+    const te = (DB.expenses || []).reduce((s, x) => s + x.amount, 0);
+    const td = (DB.credits || []).reduce((s, x) => s + (x.amount || 0), 0);
+    const tv = (DB.sales || []).reduce((s, x) => s + (x.vatAmount || (x.total ? Number(x.total) * 0.15 / 1.15 : 0)), 0);
+    return `<div style="padding:15px;background:rgba(0,0,0,.03);border-radius:12px;line-height:2;">
+      <p style="font-size:16px;"><b>💰 ጠቅላላ ሽያጭ (ከቫት ጋር):</b> ${ts.toFixed(2)} ETB</p>
+      <p style="font-size:16px;"><b>🧾 ጠቅላላ የተሰበሰበ 15% ቫት:</b> <span style="color:#0A5EB0;">${tv.toFixed(2)} ETB</span></p>
+      <p style="font-size:16px;"><b>📈 ጠቅላላ ትርፍ (ከወጪ በፊት):</b> <span style="color:green;">${tp.toFixed(2)} ETB</span></p>
+      <p style="font-size:16px;"><b>💸 ጠቅላላ ወጪ:</b> <span style="color:orange;">${te.toFixed(2)} ETB</span></p>
+      <p style="font-size:16px;"><b>💳 ያልተሰበሰበ ዱቤ:</b> <span style="color:red;">${td.toFixed(2)} ETB</span></p>
+      <hr><p style="font-size:18px;color:#28a745;"><b>📊 የተጣራ ትርፍ (Net Profit):</b> ${(tp - te).toFixed(2)} ETB</p></div>
+      <button class="btn-secondary" style="margin-top:10px;width:100%;" onclick="SBM.app.printModalContent()">🖨️ ሪፖርት አትም</button>`;
+  }
+
+  global.SBM = global.SBM || {};
+  global.SBM.report = {
+    renderExpenseUI, addExpense, deleteExpense,
+    renderDailyReportUI, renderSalesHistoryUI, filterSalesHistory,
+    renderVatReportUI, updateVatReport, saveVatInput,
+    renderReportsUI,
+  };
+})(window);
+
+
+// ==== receipt.js ====
+/**
+ * receipt.js — የቫት ደረሰኝ ማተሚያ
+ */
+(function (global) {
+  "use strict";
+  const { DB } = SBM;
+  const { escapeHTML } = SBM.utils;
+
+  function renderUI() {
+    const last = (DB.sales || [])[DB.sales.length - 1];
+    if (!last) return '<p style="text-align:center;">ምንም የቅርብ ጊዜ ሽያጭ የለም።</p>';
+    const vatApplied = last.vatApplied !== undefined ? last.vatApplied : (Number(last.vatAmount || 0) > 0);
+    const sub = Number(last.subtotal || (last.total ? last.total / (vatApplied ? 1.15 : 1) : 0));
+    const vat = Number(last.vatAmount || (vatApplied ? sub * 0.15 : 0));
+    const tot = Number(last.total || (sub + vat));
+    return `<div style="border:1px dashed var(--border);padding:15px;text-align:center;font-family:monospace;">
+      <h3>${escapeHTML(DB.companyName)}</h3><p><b>የእቃዎች መሸጫ ደረሰኝ${vatApplied ? " (VAT Invoice)" : ""}</b></p>
+      <p>ደንበኛ: <b>${escapeHTML(last.customer)}</b></p><p>ቀን: ${escapeHTML(last.date)}</p>
+      <hr style="border-top:1px dashed #ccc;margin:10px 0;">
+      <div style="text-align:left;font-size:13px;margin-bottom:10px;"><p><b>ዕቃዎች ዝርዝር፦</b></p><p>${escapeHTML(last.summaryName)}</p></div>
+      <hr style="border-top:1px dashed #ccc;margin:10px 0;">
+      <div style="text-align:right;font-size:13px;line-height:1.6;">
+        ${vatApplied ? `<p>ንኡስ ድምር: <b>${sub.toFixed(2)} ETB</b></p><p>ቫት 15%: <b>${vat.toFixed(2)} ETB</b></p>` : ""}
+        <p style="font-size:15px;color:#0A5EB0;"><b>ጠቅላላ ክፍያ: ${tot.toFixed(2)} ETB</b></p>
+      </div><br><button class="btn-primary" onclick="SBM.app.printModalContent()">🖨️ ፕሪንት አድርግ</button></div>`;
+  }
+
+  global.SBM = global.SBM || {};
+  global.SBM.receipt = { renderUI };
+})(window);
+
+
+// ==== backup.js ====
+/**
+ * backup.js — ዳታ ባካፕ (Export/Import) + ሙሉ ማጽጃ
+ *
+ * ማስታወሻ፦ የPIN hash እና License መረጃ ፈጽሞ በዚህ ባካፕ ውስጥ አይካተትም
+ * (database.js → exportSnapshot() የደህንነት ውሂብን አያካትትም)። ስለዚህ ባካፕ ፋይሉ
+ * ቢሰረቅ እንኳ PIN ወይም License ማግኘት አይቻልም — የቢዝነስ ዳታ ብቻ ነው የያዘው።
+ */
+(function (global) {
+  "use strict";
+  const { DB } = SBM;
+  const { showToast } = SBM.utils;
+
+  function renderUI() {
+    return `<div style="display:flex;flex-direction:column;gap:15px;">
+      <button class="btn-primary" style="padding:12px;font-size:15px;" onclick="SBM.backup.exportData()">💾 የዳታ ባካፕ አውርድ (Export)</button>
+      <button class="btn-success" style="padding:12px;font-size:15px;" onclick="SBM.backup.importData()">📥 ባካፕ መልስ (Import)</button>
+      <div style="font-size:12px;color:var(--secondary);background:rgba(0,0,0,.04);padding:10px;border-radius:8px;line-height:1.7;">
+        <b>⚠️ የኃላፊነት ክፍፍል፦</b><br>
+        • ባካፕ መያዝ <b>የደንበኛው ኃላፊነት</b> ነው — በየሳምንቱ Export አድርገው ወደ ቴሌግራም/ደመና (Drive) ይላኩ።<br>
+        • ባካፕ ፋይሉ PIN ወይም License አልያዘም — የቢዝነስ ዳታ ብቻ ነው።<br>
+        • ባካፕ ከሌለ — የጠፋ ዳታ መመለስ <b>አይቻልም</b>።
+      </div>
+      <hr style="width:100%;border:0.5px solid var(--border);">
+      <button class="btn-secondary" style="padding:12px;font-size:15px;" onclick="SBM.sync && SBM.sync.manualRestore()">☁️ ከደመና መልስ (Cloud Restore)</button>
+      <p style="font-size:11px;color:var(--secondary);">ኢንተርኔት ካለ፣ ዳታዎ ራሱ በራሱ ወደ ደመናም ይቀመጣል። ስልክዎ ቢጠፋ/ቢበላሽ፣ ተመሳሳይ License Key በአዲስ ስልክ ላይ ካስገቡ በኋላ ከሻጭዎ የተሰጠዎትን ኮድ በመጠቀም ይህንን ቁልፍ ተጠቅመው መልሰው ማግኘት ይችላሉ።</p>
+      <hr style="width:100%;border:0.5px solid var(--border);">
+      <button class="btn-danger" style="padding:12px;font-size:15px;font-weight:bold;" onclick="SBM.backup.resetAllData()">⚠️ ሁሉንም የሽያጭና ሪፖርት ታሪክ አጽዳ (Reset to 0)</button>
+    </div>`;
+  }
+
+  async function exportData() {
+    const snapshot = SBM.database.exportSnapshot();
+    // Attach a checksum so a corrupted/tampered file can be detected on import.
+    const checksum = await SBM.auth.sha256Hex(JSON.stringify(snapshot));
+    const payload = { ...snapshot, checksum };
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload));
+    const a = document.createElement("a");
+    a.setAttribute("href", dataStr);
+    a.setAttribute("download", "smart_business_backup.json");
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    showToast("ባካፕ ወርዷል! ወደ ቴሌግራም/ደመና (Drive) ይላኩት");
+  }
+
+  function importData() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json,application/json";
+    input.onchange = function () {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async function () {
+        try {
+          const data = JSON.parse(reader.result);
+          if (!data || typeof data !== "object") throw new Error("bad");
+
+          if (data.checksum) {
+            const { checksum, ...rest } = data;
+            const recomputed = await SBM.auth.sha256Hex(JSON.stringify(rest));
+            if (recomputed !== checksum) {
+              if (!confirm("⚠️ ይህ ፋይል የተበላሸ ወይም የተቀየረ ይመስላል (checksum አልገጠመም)። ቢሆንም መቀጠል ይፈልጋሉ?")) return;
+            }
+          }
+          if (!confirm("ማስጠንቀቂያ፡ የአሁኑ ዳታ በባካፕ ይተካል። ይቀጥሉ?")) return;
+          SBM.database.importSnapshot(data);
+          showToast("ባካፕ በስኬት ተመለሰ! ✅");
+          SBM.app.closeModal();
+        } catch (e) {
+          showToast("ልክ ያልሆነ ፋይል! ❌");
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }
+
+  function resetAllData() {
+    if (confirm("እርግጠኛ ነዎት ሁንም የሽያጭ፣ የወጪ እና የዱቤ መዝገብ ማጽዳት ይፈልጋሉ?")) {
+      SBM.database.resetTransactionalData();
+      showToast("ሁሉም ዳታ ጸድቷል!");
+      SBM.app.closeModal();
+    }
+  }
+
+  global.SBM = global.SBM || {};
+  global.SBM.backup = { renderUI, exportData, importData, resetAllData };
+})(window);
+
+
+// ==== settings.js ====
+/**
+ * settings.js — ማስተካከያ (ድርጅት ስም + ፒን መቀየሪያ)
+ */
+(function (global) {
+  "use strict";
+  const { DB } = SBM;
+  const { escapeHTML, showToast } = SBM.utils;
+
+  function renderUI() {
+    return `
+      <div class="form-group"><label>የድርጅት ስም</label><input type="text" id="cfgComp" value="${escapeHTML(DB.companyName)}"></div>
+      <button class="btn-primary" onclick="SBM.settings.saveCompanyName()">የድርጅት ስም መዝግብ</button>
+      <hr style="margin:16px 0;border-color:var(--border);">
+      <h4 style="margin-bottom:10px;">🧾 ቫት (VAT)</h4>
+      <div class="form-group" style="flex-direction:row;align-items:center;gap:8px;">
+        <input type="checkbox" id="cfgVatEnabled" style="width:auto;" ${DB.vatEnabled ? "checked" : ""} onchange="SBM.settings.toggleVat()">
+        <label style="margin:0;">ቫት ተመዝጋቢ ነኝ (15% ቫት በሽያጭ ላይ ይታከል)</label>
+      </div>
+      <p style="font-size:12px;color:var(--secondary);margin-top:6px;">ይህንን ካጠፉ፣ POS ያለ ቫት ብቻ ይሸጣል፣ የቫት ሪፖርት ገጽም ይደበቃል። የትርፍ ሪፖርት ግን ሁልጊዜ ትክክለኛ ሆኖ ይቀጥላል — ውሳኔው በማንኛውም ጊዜ ሊቀየር ይችላል።</p>
+      <hr style="margin:16px 0;border-color:var(--border);">
+      <h4 style="margin-bottom:10px;">🔑 ፒን (PIN) ቀይር</h4>
+      <div class="form-group"><label>የአሁኑ ፒን</label><input type="password" id="cfgOldPin" inputmode="numeric" maxlength="6"></div>
+      <div class="form-group"><label>አዲስ ፒን</label><input type="password" id="cfgNewPin" inputmode="numeric" maxlength="6"></div>
+      <button class="btn-primary" onclick="SBM.settings.changePin()">ፒን ቀይር</button>
+      <p style="font-size:12px;color:var(--secondary);margin-top:8px;">ፒን ከቀየሩ በኋላ አዲስ የመልሶ ማግኛ ኮድ (Recovery Code) ይታያል — ይጻፉት!</p>`;
+  }
+
+  function toggleVat() {
+    DB.vatEnabled = document.getElementById("cfgVatEnabled").checked;
+    SBM.database.save("vatEnabled");
+    if (SBM.app && SBM.app.renderDashboardMenu) SBM.app.renderDashboardMenu();
+    showToast(DB.vatEnabled ? "ቫት ነቅቷል!" : "ቫት ጠፍቷል! POS ከአሁን ጀምሮ ያለ ቫት ይሸጣል");
+  }
+
+  function saveCompanyName() {
+    const c = (document.getElementById("cfgComp").value || "").trim();
+    if (!c) return alert("እባክዎን ትክክለኛ የድርጅት ስም ያስገቡ!");
+    DB.companyName = c;
+    SBM.database.save("companyName");
+    document.getElementById("headerCompName").innerText = DB.companyName;
+    showToast("የድርጅት ስም ተቀይሯል!");
+  }
+
+  async function changePin() {
+    const oldPin = (document.getElementById("cfgOldPin").value || "").trim();
+    const newPin = (document.getElementById("cfgNewPin").value || "").trim();
+    if (!oldPin || !newPin) return alert("እባክዎን ሁለቱንም ፒኖች ያስገቡ!");
+    if (newPin.length < 4) return alert("አዲሱ ፒን ቢያንስ 4 አሃዝ ሊሆን ይገባል!");
+    const result = await SBM.auth.changePin(oldPin, newPin);
+    if (!result.ok) return alert("የአሁኑ ፒን ትክክል አይደለም!");
+    alert("✅ ፒን ተቀይሯል!\n\n📝 አዲስ የመልሶ ማግኛ ኮድ (Recovery Code)፦\n\n" + result.recoveryCode + "\n\nይህንን ኮድ በወረቀት ላይ ጽፈው በጥንቃቄ ያስቀምጡ — ፒንዎን ቢረሱ ብቻ የሚያስፈልግዎ ነው፣ ዳግም አይታይም!");
+    document.getElementById("cfgOldPin").value = "";
+    document.getElementById("cfgNewPin").value = "";
+    showToast("ፒን ተቀይሯል!");
+  }
+
+  global.SBM = global.SBM || {};
+  global.SBM.settings = { renderUI, saveCompanyName, toggleVat, changePin };
+})(window);
+
+</script>
+</body>
+</html>
